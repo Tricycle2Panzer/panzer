@@ -43,6 +43,9 @@ class User(db_conn.DBConn):
     def __check_token(self, user_id, db_token, token) -> bool:# 判断登录信息是否失效
         try:
             if db_token != token:
+                print("here")
+                print(db_token)
+                print(token)
                 return False
             jwt_text = jwt_decode(encoded_token=token, user_id=user_id)
             ts = jwt_text["timestamp"]
@@ -52,6 +55,7 @@ class User(db_conn.DBConn):
                     return True
         except jwt.exceptions.InvalidSignatureError as e:
             logging.error(str(e))
+            print("there")
             return False
 
     def register(self, user_id: str, password: str):# 就是注册
@@ -68,17 +72,18 @@ class User(db_conn.DBConn):
         return 200, "ok"
 
     def check_token(self, user_id: str, token: str) -> (int, str):#单纯检查token，不明其意
-        cursor = self.conn.execute("SELECT token from user where user_id= :uid", {"uid":user_id})
+        cursor = self.conn.execute("SELECT token from users where user_id= :uid", {"uid":user_id})
         row = cursor.fetchone()
         if row is None:
             return error.error_authorization_fail()
         db_token = row[0]
         if not self.__check_token(user_id, db_token, token):
+            print("11111")
             return error.error_authorization_fail()
         return 200, "ok"
 
     def check_password(self, user_id: str, password: str) -> (int, str):#检查密码
-        cursor = self.conn.execute("SELECT password from user where user_id= :uid", {"uid":user_id})
+        cursor = self.conn.execute("SELECT password from users where user_id= :uid", {"uid":user_id})
         row = cursor.fetchone()
         if row is None:
             return error.error_authorization_fail()
@@ -97,7 +102,7 @@ class User(db_conn.DBConn):
 
             token = jwt_encode(user_id, terminal)
             cursor = self.conn.execute(
-                "UPDATE user set token= :tok , terminal = :ter where user_id = :uid",
+                "UPDATE users set token= :tok , terminal = :ter where user_id = :uid",
                 {'tok':token, 'ter':terminal, 'uid':user_id})
             if cursor.rowcount == 0:#可以这么写吗
                 return error.error_authorization_fail() + ("", )
@@ -116,9 +121,10 @@ class User(db_conn.DBConn):
 
             terminal = "terminal_{}".format(str(time.time()))
             dummy_token = jwt_encode(user_id, terminal)
-
+            print(terminal)
+            print("terminal")
             cursor = self.conn.execute(
-                "UPDATE user SET token = :tok, terminal = :ter WHERE user_id= :uid",
+                "UPDATE users SET token = :tok, terminal = :ter WHERE user_id= :uid",
                 {'tok':dummy_token, 'ter':terminal, 'uid':user_id})
             if cursor.rowcount == 0:
                 return error.error_authorization_fail()
@@ -136,7 +142,7 @@ class User(db_conn.DBConn):
             if code != 200:
                 return code, message
 
-            cursor = self.conn.execute("DELETE from user where user_id= :uid", {'uid':user_id})
+            cursor = self.conn.execute("DELETE from users where user_id= :uid", {'uid':user_id})
             if cursor.rowcount == 1:# 可以这么写吗？
                 self.conn.commit()
             else:
@@ -156,7 +162,7 @@ class User(db_conn.DBConn):
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
             cursor = self.conn.execute(
-                "UPDATE user set password = :pw, token= :tok, terminal = :ter where user_id = :uid",
+                "UPDATE users set password = :pw, token= :tok, terminal = :ter where user_id = :uid",
                 {'pw':new_password, 'tok':token, 'ter':terminal, 'uid':user_id})
             if cursor.rowcount == 0:
                 return error.error_authorization_fail()
