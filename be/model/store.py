@@ -1,13 +1,14 @@
 import logging
 import os
-import sqlite3 as sqlite
-
+# import sqlite3 as sqlite # del
+import sqlalchemy
+from be.model import db
 
 class Store:
     database: str
 
     def __init__(self, db_path):
-        self.database = os.path.join(db_path, "be.db")
+        self.database = os.path.join(db_path, "be.db")#修改成db文件中远程连接的数据库
         self.init_tables()
 
     def init_tables(self):
@@ -42,11 +43,11 @@ class Store:
             )
 
             conn.commit()
-        except sqlite.Error as e:
+        except sqlite.Error as e:# 查sqlalchemy
             logging.error(e)
             conn.rollback()
 
-    def get_db_conn(self) -> sqlite.Connection:
+    def get_db_conn(self) -> sqlite.Connection:# 查sqlalchemy 中的操作，返回db中的数据库
         return sqlite.connect(self.database)
 
 
@@ -60,4 +61,4 @@ def init_database(db_path):
 
 def get_db_conn():
     global database_instance
-    return database_instance.get_db_conn()
+    return database_instance.get_db_conn()# 要返回postgre
