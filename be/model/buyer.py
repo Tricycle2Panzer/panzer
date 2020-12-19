@@ -1,9 +1,10 @@
-import sqlite3 as sqlite
+#import sqlite3 as sqlite
 import uuid
 import json
 import logging
 from be.model import db_conn
 from be.model import error
+import sqlalchemy
 
 
 class Buyer(db_conn.DBConn):
@@ -73,7 +74,7 @@ class Buyer(db_conn.DBConn):
                 {"uid":uid, "store_id":store_id, "user_id":user_id})
             self.conn.commit()
             order_id = uid
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
@@ -97,7 +98,7 @@ class Buyer(db_conn.DBConn):
             if buyer_id != user_id:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT balance, password FROM user WHERE user_id = :buyer_id;", {"buyer_id":buyer_id,})
+            cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;", {"buyer_id":buyer_id,})
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
@@ -125,15 +126,15 @@ class Buyer(db_conn.DBConn):
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance - :total_price"
-                                  "WHERE user_id = :buyer_id AND balance >= :total_price",
-                                  {"total_price":total_price, "buyer_id":buyer_id, "total_price":total_price})
+            cursor = conn.execute("UPDATE users set balance = balance - :total_price1 "
+                                  "WHERE user_id = :buyer_id AND balance >= :total_price2",
+                                  {"total_price1":total_price, "buyer_id":buyer_id, "total_price2":total_price})
             if cursor.rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance + :total_price"
-                                  "WHERE user_id = :buyer_id",
-                                  {"total_price":total_price, "buyer_id":buyer_id})
+            cursor = conn.execute("UPDATE users set balance = balance + :total_price "
+                                  "WHERE user_id = :seller_id",
+                                  {"total_price":total_price, "seller_id":seller_id})
 
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
@@ -148,7 +149,7 @@ class Buyer(db_conn.DBConn):
 
             conn.commit()
 
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
 
         except BaseException as e:
@@ -158,7 +159,7 @@ class Buyer(db_conn.DBConn):
 
     def add_funds(self, user_id, password, add_value) -> (int, str):#买家充值
         try:
-            cursor = self.conn.execute("SELECT password  from user where user_id=:user_id", {"user_id":user_id,})
+            cursor = self.conn.execute("SELECT password from users where user_id=:user_id", {"user_id":user_id,})
             row = cursor.fetchone()
             if row is None:
                 return error.error_authorization_fail()
@@ -167,13 +168,13 @@ class Buyer(db_conn.DBConn):
                 return error.error_authorization_fail()
 
             cursor = self.conn.execute(
-                "UPDATE user SET balance = balance + :add_value WHERE user_id = :user_id",
+                "UPDATE users SET balance = balance + :add_value WHERE user_id = :user_id",
                 {"add_value":add_value, "user_id":user_id})
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(user_id)
 
             self.conn.commit()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))

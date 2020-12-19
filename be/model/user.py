@@ -43,9 +43,6 @@ class User(db_conn.DBConn):
     def __check_token(self, user_id, db_token, token) -> bool:# 判断登录信息是否失效
         try:
             if db_token != token:
-                print("here")
-                print(db_token)
-                print(token)
                 return False
             jwt_text = jwt_decode(encoded_token=token, user_id=user_id)
             ts = jwt_text["timestamp"]
@@ -55,7 +52,6 @@ class User(db_conn.DBConn):
                     return True
         except jwt.exceptions.InvalidSignatureError as e:
             logging.error(str(e))
-            print("there")
             return False
 
     def register(self, user_id: str, password: str):# 就是注册
@@ -121,8 +117,6 @@ class User(db_conn.DBConn):
 
             terminal = "terminal_{}".format(str(time.time()))
             dummy_token = jwt_encode(user_id, terminal)
-            print(terminal)
-            print("terminal")
             cursor = self.conn.execute(
                 "UPDATE users SET token = :tok, terminal = :ter WHERE user_id= :uid",
                 {'tok':dummy_token, 'ter':terminal, 'uid':user_id})
