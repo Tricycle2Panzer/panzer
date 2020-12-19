@@ -59,7 +59,7 @@ class User(db_conn.DBConn):
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
             self.conn.execute(
-                "INSERT into user(user_id, password, balance, token, terminal) "
+                "INSERT into users(user_id, password, balance, token, terminal) "
                 "VALUES (:uid, :pw, 0, :tok, :ter);",
                 { "uid":user_id,"pw": password,"tok":token,"ter":terminal })
             self.conn.commit()
