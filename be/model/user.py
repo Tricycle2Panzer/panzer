@@ -5,7 +5,6 @@ import logging
 from be.model import error
 from be.model import db_conn
 import sqlalchemy
-from be.model import db
 
 # encode a json string like:
 #   {
