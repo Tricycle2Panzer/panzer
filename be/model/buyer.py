@@ -37,6 +37,7 @@ class Buyer(db_conn.DBConn):
                 return error.error_non_exist_store_id(store_id) + (order_id, )
             uid = "{}_{}_{}".format(user_id, store_id, str(uuid.uuid1()))
 
+            total_price = 0
             for book_id, count in id_and_count:
                 cursor = self.conn.execute(
                     "SELECT book_id, stock_level, book_info FROM store "
@@ -68,10 +69,13 @@ class Buyer(db_conn.DBConn):
                         "VALUES(:uid, :book_id, :count, :price)",
                         {"uid":uid, "book_id":book_id, "count":count, "price":price})
 
+                # 计算总价
+                total_price += count*price
+
             self.conn.execute(
-                "INSERT INTO new_order(order_id, store_id, user_id) "
-                "VALUES(:uid, :store_id, :user_id)",
-                {"uid":uid, "store_id":store_id, "user_id":user_id})
+                "INSERT INTO new_order(order_id, store_id, user_id, total_price) "
+                "VALUES(:uid, :store_id, :user_id, :total_price)",
+                {"uid":uid, "store_id":store_id, "user_id":user_id, "total_price":total_price})#增加总价和订单状态
             self.conn.commit()
             order_id = uid
         except sqlalchemy.exc.IntegrityError as e:
@@ -83,7 +87,8 @@ class Buyer(db_conn.DBConn):
 
         return 200, "ok", order_id
 
-    def payment(self, user_id: str, password: str, order_id: str) -> (int, str):#买家付款
+    # 手动收货
+    def receive_books(self, user_id: str, password: str, order_id: str) -> (int, str):
         conn = self.conn
         try:
             cursor = conn.execute("SELECT order_id, user_id, store_id FROM new_order WHERE order_id = :order_id", {"order_id":order_id,})
@@ -136,6 +141,10 @@ class Buyer(db_conn.DBConn):
                                   "WHERE user_id = :seller_id",
                                   {"total_price":total_price, "seller_id":seller_id})
 
+            # 更改订单状态
+            self.conn.execute(
+                "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))
+
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
 
@@ -180,3 +189,23 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok"
+
+
+    # 买家手动取消订单
+    def cancel(self, buyer_id, order_id):
+        try:
+            if not self.user_id_exist(buyer_id):
+                return error.error_non_exist_user_id(buyer_id)
+            # if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
+            #     return error.error_non_exist_order_id(order_id)
+
+            self.conn.execute(
+                "UPDATE new_order set status=0 where order_id = '%s' ;" % (order_id))
+            self.conn.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"
+
+

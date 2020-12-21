@@ -22,14 +22,14 @@ def new_order():
     return jsonify({"message": message, "order_id": order_id}), code
 
 
-@bp_buyer.route("/payment", methods=["POST"])
-def payment():
-    user_id: str = request.json.get("user_id")
-    order_id: str = request.json.get("order_id")
-    password: str = request.json.get("password")
-    b = Buyer()
-    code, message = b.payment(user_id, password, order_id)
-    return jsonify({"message": message}), code
+# @bp_buyer.route("/payment", methods=["POST"])
+# def payment():
+#     user_id: str = request.json.get("user_id")
+#     order_id: str = request.json.get("order_id")
+#     password: str = request.json.get("password")
+#     b = Buyer()
+#     code, message = b.payment(user_id, password, order_id)
+#     return jsonify({"message": message}), code
 
 
 @bp_buyer.route("/add_funds", methods=["POST"])
@@ -39,4 +39,25 @@ def add_funds():
     add_value = request.json.get("add_value")
     b = Buyer()
     code, message = b.add_funds(user_id, password, add_value)
+    return jsonify({"message": message}), code
+
+# 收货
+@bp_buyer.route("/receive_books", methods=["POST"])
+def send_books():
+    user_id: str = request.json.get("user_id")
+    order_id: str = request.json.get("order_id")
+    password: str = request.json.get("password")
+    b = Buyer()
+    code, message = b.receive_books(user_id, password, order_id)
+
+    return jsonify({"message": message}), code
+
+
+# 手动取消订单
+@bp_buyer.route("/cancel_order", methods=["POST"])
+def cancel():
+    user_id: str = request.json.get("buyer_id")
+    order_id: str = request.json.get("order_id")
+    b = Buyer()
+    code, message = b.cancel(user_id,order_id)
     return jsonify({"message": message}), code

@@ -28,3 +28,5 @@ class DBConn:
             return False
         else:
             return True
+
+    # 增加判断order_id是否存在的函数
