@@ -11,10 +11,8 @@ class Store:
 
     def __init__(self, db_path):
         self.engine = create_engine('postgresql://postgres:40960032@127.0.0.1:5432/bookstore') #本地服务器
-        self.init_tables()
-        # mongodb目前需手动建立文档集
         self.client = pymongo.MongoClient("mongodb://localhost:27017/")
-        self.mongodb = self.client["bookstore"]
+        self.init_tables()
 
     def init_tables(self):
         try:
@@ -32,14 +30,14 @@ class Store:
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS store( "
-                "store_id TEXT, book_id TEXT, stock_level INTEGER, price INTEGER"
+                "store_id TEXT, book_id TEXT, stock_level INTEGER, price INTEGER,"
                 " PRIMARY KEY(store_id, book_id))"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order( "
                 "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
-                "status INTEGER DEFAULT 1, total_price INTEGER,)"
+                "status INTEGER DEFAULT 1, total_price INTEGER)"
             )
 
             conn.execute(
@@ -60,6 +58,11 @@ class Store:
         self.conn = self.DBSession()
         return self.conn
 
+    def get_db_mongo(self):
+        self.mongodb = self.client["bookstore"]
+        # mongodb目前需手动建立文档集
+        return self.mongodb
+
 
 database_instance: Store = None
 
@@ -71,4 +74,8 @@ def init_database(db_path):
 
 def get_db_conn():
     global database_instance
-    return database_instance.get_db_conn()# 要返回postgre
+    return database_instance.get_db_conn()
+
+def get_db_mongo():
+    global database_instance
+    return database_instance.get_db_mongo()

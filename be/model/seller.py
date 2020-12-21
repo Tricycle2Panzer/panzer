@@ -1,7 +1,8 @@
-#import sqlite3 as sqlite
 from be.model import error
 from be.model import db_conn
 import sqlalchemy
+import json
+from pymongo.errors import PyMongoError
 
 
 class Seller(db_conn.DBConn):
@@ -18,9 +19,20 @@ class Seller(db_conn.DBConn):
             if self.book_id_exist(store_id, book_id):
                 return error.error_exist_book_id(book_id)
 
-            self.conn.execute("INSERT into store(store_id, book_id, book_info, stock_level) VALUES (:sid, :bid, :bif, :skl)",
-                              {'sid':store_id, 'bid':book_id, 'bif':book_json_str, 'skl':stock_level})
+            book_info_json = json.loads(book_json_str)
+            price = book_info_json.get("price")
+            book_info_json.pop("price")
+            response = self.mongo['book'].insert_one(book_info_json)
+            print(response.inserted_id)
+
+            # self.conn.execute("INSERT into store(store_id, book_id, book_info, stock_level) VALUES (:sid, :bid, :bif, :skl)",
+            #                   {'sid':store_id, 'bid':book_id, 'bif':book_json_str, 'skl':stock_level})
+            self.conn.execute(
+                "INSERT into store(store_id, book_id, stock_level, price) VALUES (:sid, :bid, :skl, :prc)",
+                {'sid': store_id, 'bid': book_id, 'skl': stock_level, 'prc': price})
             self.conn.commit()
+        except PyMongoError as e:
+            return 529, "{}".format(str(e))
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
