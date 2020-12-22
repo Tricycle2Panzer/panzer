@@ -88,11 +88,12 @@ class Buyer(db_conn.DBConn):
 
         return 200, "ok", order_id
 
-    # 手动收货
-    def receive_books(self, user_id: str, password: str, order_id: str) -> (int, str):
+    # 买家付钱
+    def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
         conn = self.conn
         try:
-            cursor = conn.execute("SELECT order_id, user_id, store_id FROM new_order WHERE order_id = :order_id", {"order_id":order_id,})
+            cursor = conn.execute("SELECT order_id, user_id, store_id ,total_price FROM new_order WHERE order_id = :order_id",
+                                  {"order_id": order_id, })
             row = cursor.fetchone()
             if row is None:
                 return error.error_invalid_order_id(order_id)
@@ -100,11 +101,13 @@ class Buyer(db_conn.DBConn):
             order_id = row[0]
             buyer_id = row[1]
             store_id = row[2]
+            total_price = row[3]# 总价
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;", {"buyer_id":buyer_id,})
+            cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;",
+                                  {"buyer_id": buyer_id, })
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
@@ -112,7 +115,8 @@ class Buyer(db_conn.DBConn):
             if password != row[1]:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;", {"store_id":store_id,})
+            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
+                                  {"store_id": store_id, })
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_store_id(store_id)
@@ -122,40 +126,38 @@ class Buyer(db_conn.DBConn):
             if not self.user_id_exist(seller_id):
                 return error.error_non_exist_user_id(seller_id)
 
-            cursor = conn.execute("SELECT book_id, count, price FROM new_order_detail WHERE order_id = :order_id;", {"order_id":order_id,})
-            total_price = 0
-            for row in cursor:
-                count = row[1]
-                price = row[2]
-                total_price = total_price + price * count
+            # cursor = conn.execute("SELECT book_id, count, price FROM new_order_detail WHERE order_id = :order_id;",
+            #                       {"order_id": order_id, })
+            # total_price = 0
+            # for row in cursor:
+            #     count = row[1]
+            #     price = row[2]
+            #     total_price = total_price + price * count
+            #
+            # if balance < total_price:
+            #     return error.error_not_sufficient_funds(order_id)
 
-            if balance < total_price:
-                return error.error_not_sufficient_funds(order_id)
-
+            # 下单扣买家的钱
             cursor = conn.execute("UPDATE users set balance = balance - :total_price1 "
                                   "WHERE user_id = :buyer_id AND balance >= :total_price2",
-                                  {"total_price1":total_price, "buyer_id":buyer_id, "total_price2":total_price})
+                                  {"total_price1": total_price, "buyer_id": buyer_id, "total_price2": total_price})
             if cursor.rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE users set balance = balance + :total_price "
-                                  "WHERE user_id = :seller_id",
-                                  {"total_price":total_price, "seller_id":seller_id})
+            # cursor = conn.execute("UPDATE users set balance = balance + :total_price "
+            #                       "WHERE user_id = :seller_id",
+            #                       {"total_price": total_price, "seller_id": seller_id})
+            #
+            # if cursor.rowcount == 0:
+            #     return error.error_non_exist_user_id(buyer_id)
 
-            # 更改订单状态
-            self.conn.execute(
-                "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))
-
-            if cursor.rowcount == 0:
-                return error.error_non_exist_user_id(buyer_id)
-
-            cursor = conn.execute("DELETE FROM new_order WHERE order_id = :order_id", {"order_id":order_id, })
-            if cursor.rowcount == 0:
-                return error.error_invalid_order_id(order_id)
-
-            cursor = conn.execute("DELETE FROM new_order_detail where order_id = :order_id", {"order_id":order_id, })
-            if cursor.rowcount == 0:
-                return error.error_invalid_order_id(order_id)
+            # cursor = conn.execute("DELETE FROM new_order WHERE order_id = :order_id", {"order_id": order_id, })
+            # if cursor.rowcount == 0:
+            #     return error.error_invalid_order_id(order_id)
+            #
+            # cursor = conn.execute("DELETE FROM new_order_detail where order_id = :order_id", {"order_id": order_id, })
+            # if cursor.rowcount == 0:
+            #     return error.error_invalid_order_id(order_id)
 
             conn.commit()
 
@@ -166,6 +168,57 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok"
+
+
+    # 手动收货 改订单状态，给卖家钱
+    def receive_books(self, user_id: str, password: str, order_id: str) -> (int, str):
+        try:
+            if not self.user_id_exist(user_id):
+                return error.error_non_exist_user_id(user_id)
+            # if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
+            #     return error.error_non_exist_order_id(order_id)
+
+            cursor = self.conn.execute("SELECT order_id, user_id, store_id ,total_price FROM new_order WHERE order_id = :order_id",
+                                  {"order_id": order_id, })
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_invalid_order_id(order_id)
+
+            order_id = row[0]
+            buyer_id = row[1]
+            store_id = row[2]
+            total_price = row[3]  # 总价
+
+            if buyer_id != user_id:
+                return error.error_authorization_fail()
+
+            cursor = self.conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
+                                  {"store_id": store_id, })
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_non_exist_store_id(store_id)
+
+            seller_id = row[1]
+
+            if not self.user_id_exist(seller_id):
+                return error.error_non_exist_user_id(seller_id)
+
+            cursor = self.conn.execute("UPDATE users set balance = balance + :total_price "
+                                  "WHERE user_id = :seller_id",
+                                  {"total_price": total_price, "seller_id": seller_id})
+
+            if cursor.rowcount == 0:
+                return error.error_non_exist_user_id(buyer_id)
+
+            self.conn.execute(
+                "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
+            self.conn.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"
+
 
     def add_funds(self, user_id, password, add_value) -> (int, str):#买家充值
         try:

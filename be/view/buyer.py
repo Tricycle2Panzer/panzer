@@ -22,14 +22,14 @@ def new_order():
     return jsonify({"message": message, "order_id": order_id}), code
 
 
-# @bp_buyer.route("/payment", methods=["POST"])
-# def payment():
-#     user_id: str = request.json.get("user_id")
-#     order_id: str = request.json.get("order_id")
-#     password: str = request.json.get("password")
-#     b = Buyer()
-#     code, message = b.payment(user_id, password, order_id)
-#     return jsonify({"message": message}), code
+@bp_buyer.route("/payment", methods=["POST"])
+def payment():
+    user_id: str = request.json.get("user_id")
+    order_id: str = request.json.get("order_id")
+    password: str = request.json.get("password")
+    b = Buyer()
+    code, message = b.payment(user_id, password, order_id)
+    return jsonify({"message": message}), code
 
 
 @bp_buyer.route("/add_funds", methods=["POST"])
