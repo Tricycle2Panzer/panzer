@@ -3,6 +3,7 @@ from be.model import db_conn
 import sqlalchemy
 import json
 from pymongo.errors import PyMongoError
+from be.model import nlp
 
 
 class Seller(db_conn.DBConn):
@@ -20,11 +21,39 @@ class Seller(db_conn.DBConn):
                 return error.error_exist_book_id(book_id)
 
             book_info_json = json.loads(book_json_str)
+
+            # ---分离作者国籍开始---
+            # 将作者栏中的作者国籍拆出，便于建立倒排表
+
+            # ---分离作者国籍结束---
+
+            # ---提取关键字开始---
+            # 提取简介及目录中关键字，并将关键字加入书的标签
+            tags = []
+            if "tags" in book_info_json.keys():
+                tags = book_info_json.get("tags")
+            if "author_intro" in book_info_json.keys():
+                keyword = nlp.get_keyword(book_info_json.get("author_intro"))
+                tags += keyword
+            if "book_intro" in book_info_json.keys():
+                keyword = nlp.get_keyword(book_info_json.get("book_intro"))
+                tags += keyword
+            if "content" in book_info_json.keys():
+                keyword = nlp.get_keyword(book_info_json.get("content"))
+                tags += keyword
+            book_info_json["tags"] = tags
+            # ---提取关键字结束---
+
+            # ---加入倒排索引开始---
+            # 将新书的标题、作者、标签加入倒排索引表
+
+            # ---加入倒排索引结束---
+
             price = book_info_json.get("price")
             book_info_json.pop("price")
             response = self.mongo['book'].insert_one(book_info_json)
-            print(response.inserted_id)
-
+            mongo_id = str(response.inserted_id)
+            # print(response.inserted_id)
             # self.conn.execute("INSERT into store(store_id, book_id, book_info, stock_level) VALUES (:sid, :bid, :bif, :skl)",
             #                   {'sid':store_id, 'bid':book_id, 'bif':book_json_str, 'skl':stock_level})
             self.conn.execute(
