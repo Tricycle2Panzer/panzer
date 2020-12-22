@@ -20,42 +20,55 @@ class Seller(db_conn.DBConn):
             if self.book_id_exist(store_id, book_id):
                 return error.error_exist_book_id(book_id)
 
+            response = self.mongo['book'].find_one({'id':book_id})
             book_info_json = json.loads(book_json_str)
-
-            # ---分离作者国籍开始---
-            # 将作者栏中的作者国籍拆出，便于建立倒排表
-
-            # ---分离作者国籍结束---
-
-            # ---提取关键字开始---
-            # 提取简介及目录中关键字，并将关键字加入书的标签
-            tags = []
-            if "tags" in book_info_json.keys():
-                tags = book_info_json.get("tags")
-            if "author_intro" in book_info_json.keys():
-                keyword = nlp.get_keyword(book_info_json.get("author_intro"))
-                tags += keyword
-            if "book_intro" in book_info_json.keys():
-                keyword = nlp.get_keyword(book_info_json.get("book_intro"))
-                tags += keyword
-            if "content" in book_info_json.keys():
-                keyword = nlp.get_keyword(book_info_json.get("content"))
-                tags += keyword
-            book_info_json["tags"] = tags
-            # ---提取关键字结束---
-
-            # ---加入倒排索引开始---
-            # 将新书的标题、作者、标签加入倒排索引表
-
-            # ---加入倒排索引结束---
-
             price = book_info_json.get("price")
             book_info_json.pop("price")
-            response = self.mongo['book'].insert_one(book_info_json)
-            mongo_id = str(response.inserted_id)
-            # print(response.inserted_id)
-            # self.conn.execute("INSERT into store(store_id, book_id, book_info, stock_level) VALUES (:sid, :bid, :bif, :skl)",
-            #                   {'sid':store_id, 'bid':book_id, 'bif':book_json_str, 'skl':stock_level})
+
+            if response != None:
+                mongo_id = str(response["_id"])
+            else:
+                # ---分离作者国籍开始---
+                # 将作者栏中的作者国籍拆出，便于建立倒排表
+                if "author" in book_info_json.keys():
+                    author = book_info_json.get("author")
+                # ---分离作者国籍结束---
+
+                # ---提取关键字开始---
+                # 提取简介及目录中关键字，并将关键字加入书的标签
+                tags = []
+                if "tags" in book_info_json.keys():
+                    tags = book_info_json.get("tags")
+                if "author_intro" in book_info_json.keys():
+                    keyword = nlp.get_keyword(book_info_json.get("author_intro"))
+                    tags += keyword
+                if "book_intro" in book_info_json.keys():
+                    keyword = nlp.get_keyword(book_info_json.get("book_intro"))
+                    tags += keyword
+                if "content" in book_info_json.keys():
+                    keyword = nlp.get_keyword(book_info_json.get("content"))
+                    tags += keyword
+                tags = list(set(tags))
+                book_info_json["tags"] = tags
+                # ---提取关键字结束---
+
+                # ---加入倒排索引开始---
+                # 将新书的标题、作者、标签加入倒排索引表
+                preffixs = []
+                preffixs += nlp.get_middle_ffix(book_info_json.get("title"))
+                if "author" in book_info_json.keys():
+                    preffixs += nlp.get_preffix(book_info_json.get("author"))
+                if "original_title" in book_info_json.keys():
+                    preffixs += nlp.get_preffix(book_info_json.get("original_title"))
+                if "translator" in book_info_json.keys():
+                    preffixs += nlp.get_preffix(book_info_json.get("translator"))
+                preffixs = list(set(preffixs))
+
+                # ---加入倒排索引结束---
+
+                response = self.mongo['book'].insert_one(book_info_json)
+                mongo_id = str(response.inserted_id)
+
             self.conn.execute(
                 "INSERT into store(store_id, book_id, stock_level, price) VALUES (:sid, :bid, :skl, :prc)",
                 {'sid': store_id, 'bid': book_id, 'skl': stock_level, 'prc': price})
