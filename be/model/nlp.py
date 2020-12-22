@@ -32,3 +32,15 @@ def get_middle_ffix(text):
         middle += get_preffix(words)
     middle = list(set(middle))
     return middle
+
+def get_country(text):
+    pattern = r'\[[^()]\]'
+    #pattern = r'\[[^()]*\]'
+    country = re.search(pattern,text)
+    if not country:
+        print('author region is NULL')
+        return '[中]'
+    else:
+        auth_country = list(country.group())
+        print('author region:' + country.group())
+    return country.group()
