@@ -40,7 +40,7 @@ class Buyer(db_conn.DBConn):
             total_price = 0
             for book_id, count in id_and_count:
                 cursor = self.conn.execute(
-                    "SELECT book_id, stock_level, book_info FROM store "
+                    "SELECT book_id, stock_level, price FROM store "
                     "WHERE store_id = :store_id AND book_id = :book_id",
                     {"store_id":store_id, "book_id":book_id})
                 row = cursor.fetchone()#只取最上面的第一条结果
@@ -48,9 +48,10 @@ class Buyer(db_conn.DBConn):
                     return error.error_non_exist_book_id(book_id) + (order_id, )
 
                 stock_level = row[1]#库存
-                book_info = row[2] #书籍信息
-                book_info_json = json.loads(book_info)
-                price = book_info_json.get("price") #书籍价格
+                #book_info = row[2] #书籍信息
+                #book_info_json = json.loads(book_info)
+                #price = book_info_json.get("price") #书籍价格
+                price = row[2]
 
                 if stock_level < count: #判断库存
                     return error.error_stock_level_low(book_id) + (order_id,)
