@@ -34,13 +34,19 @@ def get_middle_ffix(text):
     return middle
 
 def get_country(text):
+    pattern_brace = r'\([^()]\)'
     pattern = r'\[[^()]\]'
-    #pattern = r'\[[^()]*\]'
+#     pattern = r'\[[^()]*\]'
     country = re.search(pattern,text)
-    if not country:
+    country_brace = re.search(pattern_brace,text)
+    if not country and not country_brace:
         print('author region is NULL')
-        return '[中]'
+        return '中'
+    elif country_brace:
+        auth_country = list(country_brace.group())
+        print('author region:' + country_brace.group())
+        return country_brace.group()[1]
     else:
         auth_country = list(country.group())
         print('author region:' + country.group())
-    return country.group()
+        return country.group()[1]
