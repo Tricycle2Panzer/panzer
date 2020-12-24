@@ -4,6 +4,7 @@ import sqlalchemy
 import json
 from pymongo.errors import PyMongoError
 from be.model import nlp
+from be.model.nlp import *
 
 
 class Seller(db_conn.DBConn):
@@ -32,6 +33,10 @@ class Seller(db_conn.DBConn):
                 # 将作者栏中的作者国籍拆出，便于建立倒排表
                 if "author" in book_info_json.keys():
                     author = book_info_json.get("author")
+                    country, author = get_country_and_author(author)
+                    if country != "" and author != "":
+                        book_info_json["country"] = country
+                        book_info_json["author"] = author
                 # ---分离作者国籍结束---
 
                 # ---提取关键字开始---
@@ -55,7 +60,8 @@ class Seller(db_conn.DBConn):
                 # ---加入倒排索引开始---
                 # 将新书的标题、作者、标签加入倒排索引表
                 preffixs = []
-                preffixs += nlp.get_middle_ffix(book_info_json.get("title"))
+                title = book_info_json.get("title")
+                preffixs += nlp.get_middle_ffix(title)
                 if "author" in book_info_json.keys():
                     preffixs += nlp.get_preffix(book_info_json.get("author"))
                 if "original_title" in book_info_json.keys():
@@ -63,7 +69,10 @@ class Seller(db_conn.DBConn):
                 if "translator" in book_info_json.keys():
                     preffixs += nlp.get_preffix(book_info_json.get("translator"))
                 preffixs = list(set(preffixs))
-
+                for preffix in preffixs:
+                    self.conn.execute(
+                        "INSERT into invert_index(search_key, book_id) VALUES (:sky, :bid)",
+                        {'sky': preffix, 'bid': book_id})
                 # ---加入倒排索引结束---
 
                 response = self.mongo['book'].insert_one(book_info_json)

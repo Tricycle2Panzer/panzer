@@ -50,3 +50,22 @@ def get_country(text):
         auth_country = list(country.group())
         print('author region:' + country.group())
         return country.group()[1]
+
+def get_country_and_author(text):
+    l = len(text)
+    b = False
+    country = ""
+    author = ""
+    for i in range(l):
+        if text[i] in ")]}）】」":
+            b = False
+        elif b == True:
+            country += text[i]
+        elif text[i] in "([{（【「":
+            b = True
+            if country != "":
+                country += "_"
+        else:
+            author += text[i]
+            continue
+    return country, author

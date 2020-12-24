@@ -46,6 +46,12 @@ class Store:
                 "PRIMARY KEY(order_id, book_id))"
             )
 
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS invert_index( "
+                "search_key TEXT, search_id INTEGER auto_increment, book_id TEXT, "
+                "PRIMARY KEY(search_key, search_id))"
+            )
+
             conn.commit()
         except IntegrityError as e:# 查sqlalchemy
             logging.error(e)
