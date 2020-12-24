@@ -63,10 +63,16 @@ class Seller(db_conn.DBConn):
                 title = book_info_json.get("title")
                 preffixs += nlp.get_middle_ffix(title)
                 if "author" in book_info_json.keys():
+                    names = parse_name(book_info_json.get("author"))
+                    for i in range(1,len(names)):
+                        preffixs += nlp.get_preffix(names[i])
                     preffixs += nlp.get_preffix(book_info_json.get("author"))
                 if "original_title" in book_info_json.keys():
                     preffixs += nlp.get_preffix(book_info_json.get("original_title"))
                 if "translator" in book_info_json.keys():
+                    names = parse_name(book_info_json.get("translator"))
+                    for i in range(1, len(names)):
+                        preffixs += nlp.get_preffix(names[i])
                     preffixs += nlp.get_preffix(book_info_json.get("translator"))
                 preffixs = list(set(preffixs))
                 for preffix in preffixs:

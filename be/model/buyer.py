@@ -262,4 +262,21 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
+    def search(self, buyer_id, search_key, page):
+        try:
+            if not self.user_id_exist(buyer_id):
+                return error.error_non_exist_user_id(buyer_id)
+            page_size = 20
+            page_lower = page_size * (page - 1)
+            page_upper = page_size * page
 
+            self.conn.execute(
+                "SELECT search_id, book_id from invert_index "
+                "where search_key = '%s' and search_id > '%d' and search_id < '%d' ;"
+                % (search_key, page_lower, page_upper))
+            self.conn.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"

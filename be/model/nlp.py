@@ -3,6 +3,8 @@ import jieba
 import re
 
 def get_keyword(text):
+    if isinstance(text,str) == False:
+        return []
     summary_rate = 0.015
     text = re.sub(r"\n+", '\n', text)
     text = re.sub(r"\s+", ' ', text)
@@ -16,6 +18,8 @@ def get_keyword(text):
     return keywords
 
 def get_preffix(text):
+    if isinstance(text,str) == False:
+        return []
     l = len(text)
     pre = []
     for i in range(1,l+1):
@@ -23,6 +27,8 @@ def get_preffix(text):
     return pre
 
 def get_middle_ffix(text):
+    if isinstance(text,str) == False:
+        return []
     word_list = list(jieba.cut(text))
     l = len(word_list)
     middle = []
@@ -34,6 +40,8 @@ def get_middle_ffix(text):
     return middle
 
 def get_country(text):
+    if isinstance(text,str) == False:
+        return ""
     pattern_brace = r'\([^()]\)'
     pattern = r'\[[^()]\]'
 #     pattern = r'\[[^()]*\]'
@@ -52,6 +60,8 @@ def get_country(text):
         return country.group()[1]
 
 def get_country_and_author(text):
+    if isinstance(text,str) == False:
+        return "", ""
     l = len(text)
     b = False
     country = ""
@@ -69,3 +79,17 @@ def get_country_and_author(text):
             author += text[i]
             continue
     return country, author
+
+def parse_name(text):
+    if isinstance(text,str) == False:
+        return []
+    pre = 0
+    l = len(text)
+    names = []
+    for i in range(l):
+        if text[i] in '・· ,， ':
+            if text[pre:i] != "":
+                names.append(text[pre:i])
+            pre = i+1
+    names.append(text[pre:l])
+    return names
