@@ -264,19 +264,36 @@ class Buyer(db_conn.DBConn):
 
     def search(self, buyer_id, search_key, page):
         try:
+            print(search_key)
             if not self.user_id_exist(buyer_id):
                 return error.error_non_exist_user_id(buyer_id)
             page_size = 20
             page_lower = page_size * (page - 1)
             page_upper = page_size * page
 
-            self.conn.execute(
+            # cursor = self.conn.execute(
+            #     "SELECT search_id, book_id from invert_index "
+            #     "where search_key = '%s' "
+            #     "ORDER BY search_id limit '%d' offset '%d';"
+            #     % (search_key, page_upper, page_lower))
+            cursor = self.conn.execute(
                 "SELECT search_id, book_id from invert_index "
-                "where search_key = '%s' and search_id > '%d' and search_id < '%d' ;"
-                % (search_key, page_lower, page_upper))
+                "where search_key = '%s' "
+                "ORDER BY search_id;"
+                % (search_key))
+            rows = cursor.fetchall()
+
+            # if rows == None:  #增加searchkey不存在的错误处理
+            #     return error.error_no_such_key(search_key)
+
+            message = []
+            for row in rows:
+                message.append(row[1])
+            print(message)
+
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
-        return 200, "ok"
+        return 200, message
