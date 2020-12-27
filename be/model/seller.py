@@ -137,7 +137,7 @@ class Seller(db_conn.DBConn):
             #     return error.error_non_exist_order_id(order_id)
 
             self.conn.execute(
-                "UPDATE new_order set status=2 where order_id = '%s' ;" % (order_id))
+                "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
