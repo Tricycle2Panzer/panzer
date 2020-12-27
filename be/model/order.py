@@ -10,18 +10,28 @@ to_be_paid = [[daemon,get_time_stamp()]]
 
 def add_order(orderID):
     to_be_paid.append([orderID,int(get_time_stamp())])
+    print("add successfully")
+    print(to_be_paid)
     return 1
 
 def delete_pending_order(orderID):
     for i in range(0,len(to_be_paid)):
         if to_be_paid[i][0]==orderID:
             to_be_paid.pop(i) #will return something
+            print("slsxkl")
             break
+    print(to_be_paid)
     return 0
 
 def time_exceed_delete():
+    del_temp=[]
     cur_time = get_time_stamp()
     for i in range(0,len(to_be_paid)):
-        if cur_time-to_be_paid[i][1]>time_limit:
-            delete_pending_order(i)
+        time_diff = cur_time-to_be_paid[i][1]
+        print(time_diff)
+        if time_diff > time_limit:
+            del_temp.append(i)
+            #delete_pending_order(i)
+    for k in range(0,len(del_temp)):
+        delete_pending_order(del_temp[k])
     return 0
