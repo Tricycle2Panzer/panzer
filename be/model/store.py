@@ -49,6 +49,7 @@ class Store:
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS invert_index( "
                 "search_key TEXT, search_id serial, book_id TEXT, "
+                "book_title TEXT, book_author TEXT, "
                 "PRIMARY KEY(search_key, search_id))"
             )
 

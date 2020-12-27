@@ -5,6 +5,8 @@ import logging
 from be.model import db_conn
 from be.model import error
 import sqlalchemy
+from be.model.order import add_order,delete_pending_order
+from be.model.timer import get_time_now,get_time_stamp
 
 
 class Buyer(db_conn.DBConn):
@@ -79,6 +81,8 @@ class Buyer(db_conn.DBConn):
                 {"uid":uid, "store_id":store_id, "user_id":user_id, "total_price":total_price})#增加总价和订单状态
             self.conn.commit()
             order_id = uid
+            # 增加订单到数组
+            add_order(order_id)
         except sqlalchemy.exc.IntegrityError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
@@ -144,6 +148,11 @@ class Buyer(db_conn.DBConn):
             if cursor.rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
+            self.conn.execute(
+                "UPDATE new_order set status=2 where order_id = '%s' ;" % (order_id))
+            #从数组中删除
+            delete_pending_order(order_id)
+            self.conn.commit()
             # cursor = conn.execute("UPDATE users set balance = balance + :total_price "
             #                       "WHERE user_id = :seller_id",
             #                       {"total_price": total_price, "seller_id": seller_id})
@@ -170,7 +179,7 @@ class Buyer(db_conn.DBConn):
         return 200, "ok"
 
 
-    # 手动收货 改订单状态，给卖家钱
+    # 手动收货 改订单状态，给卖家钱  ##后期考虑自动收货
     def receive_books(self, user_id: str, password: str, order_id: str) -> (int, str):
         try:
             if not self.user_id_exist(user_id):
@@ -211,7 +220,7 @@ class Buyer(db_conn.DBConn):
                 return error.error_non_exist_user_id(buyer_id)
 
             self.conn.execute(
-                "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
+                "UPDATE new_order set status=4 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -248,6 +257,12 @@ class Buyer(db_conn.DBConn):
     # 买家手动取消订单
     def cancel(self, buyer_id, order_id):
         try:
+            cursor = self.conn.execute("SELECT status FROM new_order WHERE order_id = :order_id;",
+                                       {"order_id": order_id, })
+            row = cursor.fetchone()
+            # if row[0]!=1:  #错误处理订单不能被取消
+            #     return error.error_unable_cancel(order_id)
+
             if not self.user_id_exist(buyer_id):
                 return error.error_non_exist_user_id(buyer_id)
             # if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
@@ -255,6 +270,8 @@ class Buyer(db_conn.DBConn):
 
             self.conn.execute(
                 "UPDATE new_order set status=0 where order_id = '%s' ;" % (order_id))
+            # 从数组中删除
+            delete_pending_order(order_id)
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
