@@ -267,20 +267,15 @@ class Buyer(db_conn.DBConn):
             print(search_key)
             if not self.user_id_exist(buyer_id):
                 return error.error_non_exist_user_id(buyer_id)
-            page_size = 20
+            page_size = 2
             page_lower = page_size * (page - 1)
-            page_upper = page_size * page
+            print(page_lower)
 
-            # cursor = self.conn.execute(
-            #     "SELECT search_id, book_id from invert_index "
-            #     "where search_key = '%s' "
-            #     "ORDER BY search_id limit '%d' offset '%d';"
-            #     % (search_key, page_upper, page_lower))
             cursor = self.conn.execute(
                 "SELECT search_id, book_id from invert_index "
                 "where search_key = '%s' "
-                "ORDER BY search_id;"
-                % (search_key))
+                "ORDER BY search_id limit '%d' offset '%d';"
+                % (search_key, page_size, page_lower))
             rows = cursor.fetchall()
 
             # if rows == None:  #增加searchkey不存在的错误处理
