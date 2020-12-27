@@ -31,6 +31,7 @@ class Seller(db_conn.DBConn):
             else:
                 # ---分离作者国籍开始---
                 # 将作者栏中的作者国籍拆出，便于建立倒排表
+                author = None
                 if "author" in book_info_json.keys():
                     author = book_info_json.get("author")
                     country, author = get_country_and_author(author)
@@ -77,8 +78,9 @@ class Seller(db_conn.DBConn):
                 preffixs = list(set(preffixs))
                 for preffix in preffixs:
                     self.conn.execute(
-                        "INSERT into invert_index(search_key, book_id) VALUES (:sky, :bid)",
-                        {'sky': preffix, 'bid': book_id})
+                        "INSERT into invert_index(search_key, book_id, book_title, book_author) "
+                        "VALUES (:sky, :bid, :til, :asr)",
+                        {'sky': preffix, 'bid': book_id, 'til': title, 'asr': author})
                 # ---加入倒排索引结束---
 
                 response = self.mongo['book'].insert_one(book_info_json)
