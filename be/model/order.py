@@ -18,9 +18,9 @@ def delete_pending_order(orderID):
     for i in range(0,len(to_be_paid)):
         if to_be_paid[i][0]==orderID:
             to_be_paid.pop(i) #will return something
-            print("slsxkl")
+            #print("slsxkl")
             break
-    print(to_be_paid)
+    #print(to_be_paid)
     return 0
 
 def time_exceed_delete():
@@ -28,9 +28,10 @@ def time_exceed_delete():
     cur_time = get_time_stamp()
     for i in range(0,len(to_be_paid)):
         time_diff = cur_time-to_be_paid[i][1]
-        print(time_diff)
+        #print(time_diff)
         if time_diff > time_limit:
-            del_temp.append(i)
+            del_temp.append(to_be_paid[i][0]) #remenber, not to append the index of the array, we need the orderID
+            #print('deltemp'+str(del_temp[i])) #delete the chosen item which is overdue
             #delete_pending_order(i)
     for k in range(0,len(del_temp)):
         delete_pending_order(del_temp[k])
