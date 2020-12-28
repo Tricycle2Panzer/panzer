@@ -255,7 +255,7 @@ class Buyer(db_conn.DBConn):
 
 
     # 买家手动取消订单
-    def cancel(self, buyer_id, order_id):
+    def cancel(self, buyer_id, order_id) -> (int, str):
         try:
             cursor = self.conn.execute("SELECT status FROM new_order WHERE order_id = :order_id;",
                                        {"order_id": order_id, })
@@ -279,7 +279,7 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def search(self, buyer_id, search_key, page):
+    def search(self, buyer_id, search_key, page) -> (int, str, list):
         try:
             print(search_key)
             if not self.user_id_exist(buyer_id):
@@ -289,7 +289,7 @@ class Buyer(db_conn.DBConn):
             print(page_lower)
 
             cursor = self.conn.execute(
-                "SELECT search_id, book_id from invert_index "
+                "SELECT book_id, book_title, book_author from invert_index "
                 "where search_key = '%s' "
                 "ORDER BY search_id limit '%d' offset '%d';"
                 % (search_key, page_size, page_lower))
@@ -298,14 +298,19 @@ class Buyer(db_conn.DBConn):
             # if rows == None:  #增加searchkey不存在的错误处理
             #     return error.error_no_such_key(search_key)
 
-            message = []
+            result = []
             for row in rows:
-                message.append(row[1])
-            print(message)
+                book = {
+                    "bid": row[0],
+                    "title": row[1],
+                    "author": row[2]
+                }
+                result.append(book)
+            print(result)
 
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
-        return 200, message
+        return 200, "ok", result

@@ -68,5 +68,5 @@ def search():
     search_key: str = request.json.get("search_key")
     page: str = request.json.get("page")
     b = Buyer()
-    code, message = b.search(user_id, search_key, page)
-    return jsonify({"message": message}), code
+    code, message, result = b.search(user_id, search_key, page)
+    return jsonify({"message": message, "result": result}), code
