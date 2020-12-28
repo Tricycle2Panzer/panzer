@@ -184,8 +184,8 @@ class Buyer(db_conn.DBConn):
         try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
-            # if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
-            #     return error.error_non_exist_order_id(order_id)
+            if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
+                return error.error_invalid_order_id(order_id)
 
             cursor = self.conn.execute("SELECT order_id, user_id, store_id ,total_price FROM new_order WHERE order_id = :order_id",
                                   {"order_id": order_id, })
@@ -260,13 +260,13 @@ class Buyer(db_conn.DBConn):
             cursor = self.conn.execute("SELECT status FROM new_order WHERE order_id = :order_id;",
                                        {"order_id": order_id, })
             row = cursor.fetchone()
-            # if row[0]!=1:  #错误处理订单不能被取消
-            #     return error.error_unable_cancel(order_id)
+            if row[0] != 1:  #错误处理订单不能被取消
+                return error.error_unable_cancel_order(order_id)
 
             if not self.user_id_exist(buyer_id):
                 return error.error_non_exist_user_id(buyer_id)
-            # if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
-            #     return error.error_non_exist_order_id(order_id)
+            if not self.order_id_exist(order_id):
+                return error.error_invalid_order_id(order_id)
 
             self.conn.execute(
                 "UPDATE new_order set status=0 where order_id = '%s' ;" % (order_id))
@@ -295,8 +295,8 @@ class Buyer(db_conn.DBConn):
                 % (search_key, page_size, page_lower))
             rows = cursor.fetchall()
 
-            # if rows == None:  #增加searchkey不存在的错误处理
-            #     return error.error_no_such_key(search_key)
+            if rows == None:
+                return error.error_search_key_empty(search_key)
 
             result = []
             for row in rows:
