@@ -11,6 +11,7 @@ class Store:
 
     def __init__(self, db_path):
         self.engine = create_engine('postgresql://postgres:40960032@127.0.0.1:5432/bookstore') #本地服务器
+        #self.engine = create_engine('postgresql+psycopg2://postgres:Tangqiong123@localhost/bookstore') #本地服务器
         self.client = pymongo.MongoClient("mongodb://localhost:27017/")
         self.init_tables()
 

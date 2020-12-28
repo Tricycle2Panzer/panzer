@@ -31,3 +31,10 @@ class DBConn:
             return True
 
     # 增加判断order_id是否存在的函数
+    def order_id_exist(self, order_id):
+        cursor = self.conn.execute("SELECT order_id FROM new_order WHERE order_id = :oid;", {'oid':order_id})
+        row = cursor.fetchone()
+        if row is None:
+            return False
+        else:
+            return True

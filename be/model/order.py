@@ -8,6 +8,8 @@ to_be_paid = [[daemon,get_time_stamp()]]
 # print(int(to_be_paid[0][1]))
 # print(to_be_paid[1][1])
 
+#优点：通过维护全局数组to_be_paid，没有额外新启线程，代价降到最低
+
 def add_order(orderID):
     to_be_paid.append([orderID,int(get_time_stamp())])
     print("add successfully")
