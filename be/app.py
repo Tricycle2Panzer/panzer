@@ -10,5 +10,5 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 #app = Flask(__name__)
 
 if __name__ == "__main__":
-    serve.be_run()
+    serve.be_run(auto_timer=True)
 

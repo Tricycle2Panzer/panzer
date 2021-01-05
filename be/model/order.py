@@ -2,7 +2,7 @@ import datetime
 from be.model.timer import get_time_stamp
 from be.model.timer import get_time_now
 from be.model.sqlsys import sqls
-time_limit=30
+time_limit=60
 daemon = 0
 to_be_paid = [[daemon,get_time_stamp()]]
 # to_be_paid.append([daemon2,get_time_stamp()])
@@ -21,7 +21,7 @@ def delete_pending_order(orderID):
     for i in range(0,len(to_be_paid)):
         if to_be_paid[i][0]==orderID:
             to_be_paid.pop(i) #will return something
-            print("slsxkl")
+            print("AUTO DELETE ORDER")
             print(orderID)
             ss = sqls()
             ss.can_sql(orderID)
