@@ -1,9 +1,11 @@
 from aip import AipOcr
-from be.model import db_conn
+from be.model import db_conn,buyer
 import sqlalchemy
 import os
 import cv2
 import time
+import jieba.analyse as ana
+import re
 
 # 定义常量
 APP_ID = '14544448'
@@ -85,12 +87,24 @@ class OCR(db_conn.DBConn):
             res = client.general(image)
             print(res)
 
-            result = []
+            text = []
             for item in res['words_result']:
                 print(item['words'])
-                result.append(item['words'])
+                text.append(item['words'])
+            print(text)
+            text_Seg = []
+            text_len = len(text)
+            doc = ""
+            for i in range(0, text_len):
+                doc += text[i]
+            print(doc)
+            sentence_Seg = ana.textrank(doc)
+            sentence_Seg = str(sentence_Seg)
+            sentence_Seg = sentence_Seg.strip(',')
+            print(sentence_Seg)
 
-            print(result)
+            result=sentence_Seg
+
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -101,29 +115,33 @@ class OCR(db_conn.DBConn):
 
 #ocr 结果进行分词，方便检索
 
-delim = "'\{\”}\[],./'\"(,)<>《》"
+# HanLP.Config.ShowTermNature = False
+# from pyhanlp import *
+# CRFnewSegment = HanLP.newSegment("crf")
 
-def get_ocr_seg_seperated(text): #直接用返回的json进行分词
-    text_Seg = []
-    text_len = len(text)
-    for i in range (0,text_len):
-        temp = CRFnewSegment.seg(text[i])
-        for i in range (0 , len(temp)):
-            if(str(temp[i]) not in delim):
-                text_Seg.append(str(temp[i]))
-    return text_Seg
-
-def get_ocr_seg_integral(text):  #将返回的结果合并后进行分词
-    text_Seg = []
-    text_len = len(text)
-    doc = ""
-    for i in range(0, text_len):
-        doc += text[i]
-    print(doc)
-    sentence_Seg = CRFnewSegment.seg(doc)
-    sentence_Seg = str(sentence_Seg)
-    sentence_Seg = sentence_Seg.strip(',')
-    print(sentence_Seg)
+# delim = "'\{\”}\[],./'\"(,)<>《》"
+#
+# def get_ocr_seg_seperated(text): #直接用返回的json进行分词
+#     text_Seg = []
+#     text_len = len(text)
+#     for i in range (0,text_len):
+#         temp = CRFnewSegment.seg(text[i])
+#         for i in range (0 , len(temp)):
+#             if(str(temp[i]) not in delim):
+#                 text_Seg.append(str(temp[i]))
+#     return text_Seg
+#
+# def get_ocr_seg_integral(text):  #将返回的结果合并后进行分词
+#     text_Seg = []
+#     text_len = len(text)
+#     doc = ""
+#     for i in range(0, text_len):
+#         doc += text[i]
+#     print(doc)
+#     sentence_Seg = CRFnewSegment.seg(doc)
+#     sentence_Seg = str(sentence_Seg)
+#     sentence_Seg = sentence_Seg.strip(',')
+#     print(sentence_Seg)
 
 # test = [
 #     "洛",
