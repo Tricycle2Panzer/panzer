@@ -98,3 +98,40 @@ class OCR(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok", result
+
+#ocr 结果进行分词，方便检索
+
+delim = "'\{\”}\[],./'\"(,)<>《》"
+
+def get_ocr_seg_seperated(text): #直接用返回的json进行分词
+    text_Seg = []
+    text_len = len(text)
+    for i in range (0,text_len):
+        temp = CRFnewSegment.seg(text[i])
+        for i in range (0 , len(temp)):
+            if(str(temp[i]) not in delim):
+                text_Seg.append(str(temp[i]))
+    return text_Seg
+
+def get_ocr_seg_integral(text):  #将返回的结果合并后进行分词
+    text_Seg = []
+    text_len = len(text)
+    doc = ""
+    for i in range(0, text_len):
+        doc += text[i]
+    print(doc)
+    sentence_Seg = CRFnewSegment.seg(doc)
+    sentence_Seg = str(sentence_Seg)
+    sentence_Seg = sentence_Seg.strip(',')
+    print(sentence_Seg)
+
+# test = [
+#     "洛",
+#     "家信经典",
+#     "洛克菲勒",
+#     "留给儿子的38封信",
+#     "国最省家族世代传的教子经",
+#     "n上过本书,可以的",
+#     "商和管理才",
+#     "中华工商联合出版社"]
+# get_ocr_seg_integral(test)
