@@ -22,7 +22,7 @@ class Order(db_conn.DBConn):
             total_price = row[3]  # 总价
             order_time = row[4]
             self.conn.execute(
-                "INSERT INTO new_order(order_id, store_id, user_id, total_price, status, order_time) "
+                "INSERT INTO old_order(order_id, store_id, user_id, total_price, status, order_time) "
                 "VALUES(:uid, :store_id, :user_id, :total_price, :status, :order_time)",
                 {"uid": order_id, "store_id": store_id, "user_id": buyer_id, "total_price": total_price,
                  "status": end_status, "order_time": order_time})

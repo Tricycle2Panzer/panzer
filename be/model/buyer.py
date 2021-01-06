@@ -3,7 +3,7 @@ import logging
 from be.model import db_conn
 from be.model import error
 from sqlalchemy.exc import SQLAlchemyError
-from be.model.times import add_unpaid_order, delete_unpaid_order, check_order_time
+from be.model.times import add_unpaid_order, delete_unpaid_order, check_order_time, get_time_stamp
 from be.model.order import Order
 
 
