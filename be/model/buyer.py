@@ -150,9 +150,9 @@ class Buyer(db_conn.DBConn):
 
             self.conn.execute(
                 "UPDATE new_order set status=2 where order_id = '%s' ;" % (order_id))
+            self.conn.commit()
             #从数组中删除
             delete_pending_order(order_id)
-            self.conn.commit()
             # cursor = conn.execute("UPDATE users set balance = balance + :total_price "
             #                       "WHERE user_id = :seller_id",
             #                       {"total_price": total_price, "seller_id": seller_id})
