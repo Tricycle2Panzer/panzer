@@ -3,7 +3,7 @@ import time
 import logging
 from be.model import error
 from be.model import db_conn
-import sqlalchemy
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 # encode a json string like:
 #   {
@@ -62,7 +62,7 @@ class User(db_conn.DBConn):
                 "VALUES (:uid, :pw, 0, :tok, :ter);",
                 { "uid":user_id,"pw": password,"tok":token,"ter":terminal })
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError:
+        except IntegrityError:
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 
@@ -102,7 +102,7 @@ class User(db_conn.DBConn):
             if cursor.rowcount == 0:
                 return error.error_authorization_fail() + ("", )
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
             return 530, "{}".format(str(e)), ""
@@ -123,7 +123,7 @@ class User(db_conn.DBConn):
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -140,7 +140,7 @@ class User(db_conn.DBConn):
                 self.conn.commit()
             else:
                 return error.error_authorization_fail()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -161,7 +161,7 @@ class User(db_conn.DBConn):
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))

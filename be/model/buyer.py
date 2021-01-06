@@ -2,7 +2,7 @@ import uuid
 import logging
 from be.model import db_conn
 from be.model import error
-import sqlalchemy
+from sqlalchemy.exc import SQLAlchemyError
 from be.model.times import add_unpaid_order, delete_unpaid_order
 
 
@@ -62,7 +62,7 @@ class Buyer(db_conn.DBConn):
 
             # 增加订单到数组
             add_unpaid_order(order_id)
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
@@ -123,7 +123,7 @@ class Buyer(db_conn.DBConn):
             #从数组中删除
             delete_unpaid_order(order_id)
 
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
 
         except BaseException as e:
@@ -175,7 +175,7 @@ class Buyer(db_conn.DBConn):
             self.conn.execute(
                 "UPDATE new_order set status=4 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -199,7 +199,7 @@ class Buyer(db_conn.DBConn):
                 return error.error_non_exist_user_id(user_id)
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -228,7 +228,7 @@ class Buyer(db_conn.DBConn):
             # 从数组中删除
             delete_unpaid_order(order_id)
 
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -264,7 +264,7 @@ class Buyer(db_conn.DBConn):
             print(result)
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
