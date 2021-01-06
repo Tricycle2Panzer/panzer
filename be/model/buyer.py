@@ -3,7 +3,8 @@ import logging
 from be.model import db_conn
 from be.model import error
 from sqlalchemy.exc import SQLAlchemyError
-from be.model.times import add_unpaid_order, delete_unpaid_order
+from be.model.times import add_unpaid_order, delete_unpaid_order, check_order_time
+from be.model.order import Order
 
 
 class Buyer(db_conn.DBConn):
@@ -54,9 +55,9 @@ class Buyer(db_conn.DBConn):
                 total_price += count*price
 
             self.conn.execute(
-                "INSERT INTO new_order(order_id, store_id, user_id, total_price) "
-                "VALUES(:uid, :store_id, :user_id, :total_price)",
-                {"uid":uid, "store_id":store_id, "user_id":user_id, "total_price":total_price})#增加总价和订单状态
+                "INSERT INTO new_order(order_id, store_id, user_id, total_price, order_time) "
+                "VALUES(:uid, :store_id, :user_id, :total_price, :order_time)",
+                {"uid":uid, "store_id":store_id, "user_id":user_id, "total_price":total_price, "order_time": get_time_stamp()})#增加总价和订单状态
             self.conn.commit()
             order_id = uid
 
@@ -75,7 +76,7 @@ class Buyer(db_conn.DBConn):
     def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
         conn = self.conn
         try:
-            cursor = conn.execute("SELECT order_id, user_id, store_id ,total_price FROM new_order WHERE order_id = :order_id",
+            cursor = conn.execute("SELECT order_id, user_id, store_id ,total_price, order_time FROM new_order WHERE order_id = :order_id",
                                   {"order_id": order_id, })
             row = cursor.fetchone()
             if row is None:
@@ -85,9 +86,16 @@ class Buyer(db_conn.DBConn):
             buyer_id = row[1]
             store_id = row[2]
             total_price = row[3]# 总价
+            order_time = row[4]
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
+            if check_order_time(order_time) == False:
+                self.conn.commit()
+                delete_unpaid_order(order_id)
+                o = Order()
+                o.cancel_order(order_id)
+                return error.error_invalid_order_id()
 
             cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;",
                                   {"buyer_id": buyer_id, })
@@ -172,9 +180,11 @@ class Buyer(db_conn.DBConn):
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
 
-            self.conn.execute(
-                "UPDATE new_order set status=4 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
+            # self.conn.execute(
+            #     "UPDATE new_order set status=4 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
             self.conn.commit()
+            o = Order()
+            o.cancel_order(order_id, end_status=4)
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
@@ -221,12 +231,14 @@ class Buyer(db_conn.DBConn):
             if not self.order_id_exist(order_id):
                 return error.error_invalid_order_id(order_id)
 
-            self.conn.execute(
-                "UPDATE new_order set status=0 where order_id = '%s' ;" % (order_id))
-            self.conn.commit()
+            # self.conn.execute(
+            #     "UPDATE new_order set status=0 where order_id = '%s' ;" % (order_id))
+            # self.conn.commit()
 
             # 从数组中删除
             delete_unpaid_order(order_id)
+            o = Order()
+            o.cancel_order(order_id)
 
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))

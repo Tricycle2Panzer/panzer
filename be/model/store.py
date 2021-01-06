@@ -37,7 +37,7 @@ class Store:
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order( "
                 "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
-                "status INTEGER DEFAULT 1, total_price INTEGER)"
+                "status INTEGER DEFAULT 1, total_price INTEGER, order_time INTEGER )"
             )
 
             conn.execute(
@@ -51,6 +51,18 @@ class Store:
                 "search_key TEXT, search_id serial, book_id TEXT, "
                 "book_title TEXT, book_author TEXT, "
                 "PRIMARY KEY(search_key, search_id))"
+            )
+
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS old_order( "
+                "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
+                "status INTEGER, total_price INTEGER, order_time INTEGER )"
+            )
+
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS old_order_detail( "
+                "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
+                "PRIMARY KEY(order_id, book_id))"
             )
 
             conn.commit()
