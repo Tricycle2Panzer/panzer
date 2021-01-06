@@ -3,7 +3,7 @@ import logging
 from be.model import db_conn
 from be.model import error
 import sqlalchemy
-from be.model.order import add_order, delete_pending_order
+from be.model.times import add_unpaid_order, delete_unpaid_order
 
 
 class Buyer(db_conn.DBConn):
@@ -61,7 +61,7 @@ class Buyer(db_conn.DBConn):
             order_id = uid
 
             # 增加订单到数组
-            add_order(order_id)
+            add_unpaid_order(order_id)
         except sqlalchemy.exc.IntegrityError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
@@ -121,7 +121,7 @@ class Buyer(db_conn.DBConn):
             self.conn.commit()
 
             #从数组中删除
-            delete_pending_order(order_id)
+            delete_unpaid_order(order_id)
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -226,7 +226,7 @@ class Buyer(db_conn.DBConn):
             self.conn.commit()
 
             # 从数组中删除
-            delete_pending_order(order_id)
+            delete_unpaid_order(order_id)
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
