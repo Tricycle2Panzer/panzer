@@ -1,10 +1,9 @@
 import jwt
 import time
 import logging
-# import sqlite3 as sqlite #del
 from be.model import error
 from be.model import db_conn
-import sqlalchemy
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 # encode a json string like:
 #   {
@@ -54,7 +53,7 @@ class User(db_conn.DBConn):
             logging.error(str(e))
             return False
 
-    def register(self, user_id: str, password: str):# 就是注册
+    def register(self, user_id: str, password: str):
         try:
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
@@ -63,11 +62,11 @@ class User(db_conn.DBConn):
                 "VALUES (:uid, :pw, 0, :tok, :ter);",
                 { "uid":user_id,"pw": password,"tok":token,"ter":terminal })
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError:# 搞清楚这个error
+        except IntegrityError:
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 
-    def check_token(self, user_id: str, token: str) -> (int, str):#单纯检查token，不明其意
+    def check_token(self, user_id: str, token: str) -> (int, str):
         cursor = self.conn.execute("SELECT token from users where user_id= :uid", {"uid":user_id})
         row = cursor.fetchone()
         if row is None:
@@ -100,10 +99,10 @@ class User(db_conn.DBConn):
             cursor = self.conn.execute(
                 "UPDATE users set token= :tok , terminal = :ter where user_id = :uid",
                 {'tok':token, 'ter':terminal, 'uid':user_id})
-            if cursor.rowcount == 0:#可以这么写吗
+            if cursor.rowcount == 0:
                 return error.error_authorization_fail() + ("", )
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
             return 530, "{}".format(str(e)), ""
@@ -124,7 +123,7 @@ class User(db_conn.DBConn):
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -137,11 +136,11 @@ class User(db_conn.DBConn):
                 return code, message
 
             cursor = self.conn.execute("DELETE from users where user_id= :uid", {'uid':user_id})
-            if cursor.rowcount == 1:# 可以这么写吗？
+            if cursor.rowcount == 1:
                 self.conn.commit()
             else:
                 return error.error_authorization_fail()
-        except sqlalchemy.exc.IntegrityError as e:#这个错误之意？会不会发生？需要用所有的错误替代它否？
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -162,7 +161,7 @@ class User(db_conn.DBConn):
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlalchemy.exc.IntegrityError as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))

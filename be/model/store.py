@@ -1,17 +1,17 @@
 import logging
-import os
-# import sqlite3 as sqlite # del
 from sqlalchemy import create_engine,MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
+import pymongo
 
 class Store:
     database: str
 
     def __init__(self, db_path):
-        # self.database = os.path.join(db_path, "be.db")#修改成db文件中远程连接的数据库
         self.engine = create_engine('postgresql://postgres:40960032@127.0.0.1:5432/bookstore') #本地服务器
+        #self.engine = create_engine('postgresql+psycopg2://postgres:Tangqiong123@localhost/bookstore') #本地服务器
+        self.client = pymongo.MongoClient("mongodb://localhost:27017/")
         self.init_tables()
 
     def init_tables(self):
@@ -30,13 +30,14 @@ class Store:
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS store( "
-                "store_id TEXT, book_id TEXT, book_info TEXT, stock_level INTEGER,"
+                "store_id TEXT, book_id TEXT, stock_level INTEGER, price INTEGER,"
                 " PRIMARY KEY(store_id, book_id))"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order( "
-                "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT)"
+                "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
+                "status INTEGER DEFAULT 1, total_price INTEGER)"
             )
 
             conn.execute(
@@ -45,19 +46,29 @@ class Store:
                 "PRIMARY KEY(order_id, book_id))"
             )
 
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS invert_index( "
+                "search_key TEXT, search_id serial, book_id TEXT, "
+                "book_title TEXT, book_author TEXT, "
+                "PRIMARY KEY(search_key, search_id))"
+            )
+
             conn.commit()
-        except IntegrityError as e:# 查sqlalchemy
+        except IntegrityError as e:
             logging.error(e)
             conn.rollback()
 
-    # def get_db_conn(self) -> sqlite.Connection:# 查sqlalchemy 中的操作，返回db中的数据库
-    #     return sqlite.connect(self.database)
     def get_db_conn(self):
         self.Base = declarative_base()
         self.metadata = MetaData()
         self.DBSession = sessionmaker(bind=self.engine)
         self.conn = self.DBSession()
         return self.conn
+
+    def get_db_mongo(self):
+        self.mongodb = self.client["bookstore"]
+        # mongodb目前需手动建立文档集
+        return self.mongodb
 
 
 database_instance: Store = None
@@ -70,4 +81,8 @@ def init_database(db_path):
 
 def get_db_conn():
     global database_instance
-    return database_instance.get_db_conn()# 要返回postgre
+    return database_instance.get_db_conn()
+
+def get_db_mongo():
+    global database_instance
+    return database_instance.get_db_mongo()

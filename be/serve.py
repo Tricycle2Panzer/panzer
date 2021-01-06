@@ -1,12 +1,14 @@
 import logging
-import os
-from flask import Flask
-from flask import Blueprint
 from flask import request
 from be.view import auth
 from be.view import seller
 from be.view import buyer
 from be.model.store import init_database
+from flask import Blueprint
+import os
+from flask import Flask
+from flask_apscheduler import APScheduler
+import be.tasks
 
 bp_shutdown = Blueprint("shutdown", __name__)
 
@@ -24,7 +26,7 @@ def be_shutdown():
     return "Server shutting down..."
 
 
-def be_run():
+def be_run(auto_cancel=False):
     this_path = os.path.dirname(__file__)
     parent_path = os.path.dirname(this_path)
     log_file = os.path.join(parent_path, "app.log")
@@ -43,4 +45,12 @@ def be_run():
     app.register_blueprint(auth.bp_auth)
     app.register_blueprint(seller.bp_seller)
     app.register_blueprint(buyer.bp_buyer)
+
+    if auto_cancel == True:
+        sched = APScheduler()
+        app.config.from_object(be.tasks.Config())
+        sched.init_app(app)
+        sched.start()
+        print("Settings: Auto Cancel Out Of Time Orders")
     app.run()
+

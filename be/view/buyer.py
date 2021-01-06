@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask import request
 from flask import jsonify
 from be.model.buyer import Buyer
+from be.model.ocr import OCR
 
 bp_buyer = Blueprint("buyer", __name__, url_prefix="/buyer")
 
@@ -40,3 +41,42 @@ def add_funds():
     b = Buyer()
     code, message = b.add_funds(user_id, password, add_value)
     return jsonify({"message": message}), code
+
+# 收货
+@bp_buyer.route("/receive_books", methods=["POST"])
+def send_books():
+    user_id: str = request.json.get("user_id")
+    order_id: str = request.json.get("order_id")
+    password: str = request.json.get("password")
+    b = Buyer()
+    code, message = b.receive_books(user_id, password, order_id)
+
+    return jsonify({"message": message}), code
+
+
+# 手动取消订单
+@bp_buyer.route("/cancel_order", methods=["POST"])
+def cancel():
+    user_id: str = request.json.get("buyer_id")
+    order_id: str = request.json.get("order_id")
+    b = Buyer()
+    code, message = b.cancel(user_id,order_id)
+    return jsonify({"message": message}), code
+
+@bp_buyer.route("/search", methods=["POST"])
+def search():
+    user_id: str = request.json.get("buyer_id")
+    search_key: str = request.json.get("search_key")
+    page: str = request.json.get("page")
+    b = Buyer()
+    code, message, result = b.search(user_id, search_key, page)
+    return jsonify({"message": message, "result": result}), code
+
+@bp_buyer.route("/upload",methods=["POST"])
+def get_ocr():
+    # png = request.files.get('png')
+    # png.save('./math.png')
+    # path='./math.png'
+    o = OCR()
+    code, message, result=o.OCR_pic()
+    return jsonify({"message": message, "result": result}), code
