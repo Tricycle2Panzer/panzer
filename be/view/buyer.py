@@ -74,9 +74,19 @@ def search():
 
 @bp_buyer.route("/upload",methods=["POST"])
 def get_ocr():
+    png = request.files.get('png')
+    png.save('./math.png')
+    path='./math.png'
+    o = OCR()
+    code, message, result=o.OCR_pic(path)
+    return jsonify({"message": message, "result": result}), code
+
+
+@bp_buyer.route("/upload_cv",methods=["POST"])
+def get_ocr_cv():
     # png = request.files.get('png')
     # png.save('./math.png')
     # path='./math.png'
     o = OCR()
-    code, message, result=o.OCR_pic()
+    code, message, result=o.OCR_pic_cv()
     return jsonify({"message": message, "result": result}), code

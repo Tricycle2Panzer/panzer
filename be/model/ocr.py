@@ -24,7 +24,7 @@ class OCR(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
 
-    def OCR_pic(self):
+    def OCR_pic_cv(self):
         try:
             #获取图片
             saveDir = 'data/'
@@ -70,7 +70,27 @@ class OCR(db_conn.DBConn):
 
             print(result)
 
-            self.conn.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok", result
+
+    def OCR_pic(self, path):
+        try:
+            print(path)
+            image = get_file_content(path)
+            # 调用通用文字识别, 图片为本地图片
+            res = client.general(image)
+            print(res)
+
+            result = []
+            for item in res['words_result']:
+                print(item['words'])
+                result.append(item['words'])
+
+            print(result)
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
