@@ -1,5 +1,4 @@
 import logging
-import os
 from sqlalchemy import create_engine,MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -55,7 +54,7 @@ class Store:
             )
 
             conn.commit()
-        except IntegrityError as e:# 查sqlalchemy
+        except IntegrityError as e:
             logging.error(e)
             conn.rollback()
 

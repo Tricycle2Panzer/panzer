@@ -1,14 +1,8 @@
 from aip import AipOcr
 from be.model import db_conn
-import uuid
-import json
-import logging
-from be.model import db_conn
-from be.model import error
 import sqlalchemy
 import os
 import cv2
-import sys
 import time
 
 # 定义常量

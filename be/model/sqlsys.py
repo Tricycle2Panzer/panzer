@@ -1,10 +1,4 @@
-import uuid
-import json
-import logging
 from be.model import db_conn
-from be.model import error
-import sqlalchemy
-from be.model.timer import get_time_now,get_time_stamp
 
 class sqls(db_conn.DBConn):
     def __init__(self):

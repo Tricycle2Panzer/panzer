@@ -1,6 +1,4 @@
 import logging
-from flask import Flask
-from flask import Blueprint
 from flask import request
 from be.view import auth
 from be.view import seller
@@ -8,7 +6,6 @@ from be.view import buyer
 from be.model.store import init_database
 from flask import Blueprint
 import os
-from be.model.order import time_exceed_delete
 from flask import Flask
 from flask_apscheduler import APScheduler
 import be.tasks
@@ -29,7 +26,7 @@ def be_shutdown():
     return "Server shutting down..."
 
 
-def be_run(auto_timer = False):
+def be_run(auto_cancel=False):
     this_path = os.path.dirname(__file__)
     parent_path = os.path.dirname(this_path)
     log_file = os.path.join(parent_path, "app.log")
@@ -49,15 +46,11 @@ def be_run(auto_timer = False):
     app.register_blueprint(seller.bp_seller)
     app.register_blueprint(buyer.bp_buyer)
 
-    if auto_timer == True:
+    if auto_cancel == True:
         sched = APScheduler()
-        print('hello')
         app.config.from_object(be.tasks.Config())
-        print('hi')
         sched.init_app(app)
-        #sched.add_job(time_exceed_delete, 'interval', seconds=10)
-        print("here")
         sched.start()
-        print("there")
+        print("Settings: Auto Cancel Out Of Time Orders")
     app.run()
 
