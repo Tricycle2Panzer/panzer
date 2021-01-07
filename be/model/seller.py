@@ -131,11 +131,11 @@ class Seller(db_conn.DBConn):
         return 200, "ok"
 
     # 卖家发货
-    def send_books(self,seller_id,order_id):
+    def send_books(self,store_id,order_id):
         try:
-            if not self.user_id_exist(seller_id):
-                return error.error_non_exist_user_id(seller_id)
-            if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
+            if not self.store_id_exist(store_id):
+                return error.error_non_exist_store_id(store_id)
+            if not self.order_id_exist(order_id):   #增加order_id不存在的错误处理
                 return error.error_invalid_order_id(order_id)
 
             self.conn.execute(
