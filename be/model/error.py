@@ -12,7 +12,7 @@ error_code = {
     519: "not sufficient funds, order id {}",
     520: "cannot cancel order id {}",
     521: "",
-    522: "cannot find book about {}",
+    522: "",
     523: "",
     524: "",
     525: "",
@@ -60,10 +60,6 @@ def error_not_sufficient_funds(order_id):
 
 def error_unable_cancel_order(order_id):
     return 520, error_code[520].format(order_id)
-
-
-def error_search_key_empty(order_id):
-    return 522, error_code[522].format(order_id)
 
 
 def error_authorization_fail():

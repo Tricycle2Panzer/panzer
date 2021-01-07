@@ -10,6 +10,7 @@ from be.model.order import Order
 class Buyer(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
+        page_size = 3
 
     # 用户下单 买家用户ID,商铺ID,书籍购买列表(书籍购买列表,购买数量)
     def new_order(self, user_id: str, store_id: str, id_and_count: [(str, int)]) -> (int, str, str):
@@ -246,24 +247,24 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def search(self, buyer_id, search_key, page) -> (int, str, list):
+    def search(self, search_key, page=0) -> (int, str, list):
         try:
             print(search_key)
-            if not self.user_id_exist(buyer_id):
-                return error.error_non_exist_user_id(buyer_id)
-            page_size = 2
-            page_lower = page_size * (page - 1)
-            print(page_lower)
-
-            cursor = self.conn.execute(
-                "SELECT book_id, book_title, book_author from invert_index "
-                "where search_key = '%s' "
-                "ORDER BY search_id limit '%d' offset '%d';"
-                % (search_key, page_size, page_lower))
+            if page > 0:
+                page_lower = self.page_size * (page - 1)
+                print(page_lower)
+                cursor = self.conn.execute(
+                    "SELECT book_id, book_title, book_author from invert_index "
+                    "where search_key = '%s' "
+                    "ORDER BY search_id limit '%d' offset '%d';"
+                    % (search_key, self.page_size, page_lower))
+            else:
+                cursor = self.conn.execute(
+                    "SELECT book_id, book_title, book_author from invert_index "
+                    "where search_key = '%s' "
+                    "ORDER BY search_id  ;"
+                    % (search_key))
             rows = cursor.fetchall()
-
-            if rows == None:
-                return error.error_search_key_empty(search_key)
 
             result = []
             for row in rows:
@@ -277,7 +278,27 @@ class Buyer(db_conn.DBConn):
 
             self.conn.commit()
         except SQLAlchemyError as e:
-            return 528, "{}".format(str(e))
+            return 528, "{}".format(str(e)), []
         except BaseException as e:
-            return 530, "{}".format(str(e))
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
+
+    def search_many(self, word_list):
+        try:
+            tresult = []
+            for word in word_list:
+                code, message, sresult = self.search(word, 0)
+                if code != 200:
+                    continue
+                tresult += sresult
+            uni = {}
+            for dic in tresult:
+                if dic['bid'] in uni.keys():
+                    continue
+                uni[dic['bid']] = dic
+            result = list(uni.values())
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
         return 200, "ok", result

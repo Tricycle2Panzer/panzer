@@ -65,11 +65,18 @@ def cancel():
 
 @bp_buyer.route("/search", methods=["POST"])
 def search():
-    user_id: str = request.json.get("buyer_id")
     search_key: str = request.json.get("search_key")
     page: str = request.json.get("page")
     b = Buyer()
-    code, message, result = b.search(user_id, search_key, page)
+    code, message, result = b.search(search_key, page)
+    return jsonify({"message": message, "result": result}), code
+
+@bp_buyer.route("/search_many", methods=["POST"])
+def search_many():
+    search_key: list = request.json.get("search_key")
+    # page: str = request.json.get("page")
+    b = Buyer()
+    code, message, result = b.search_many(search_key)
     return jsonify({"message": message, "result": result}), code
 
 @bp_buyer.route("/upload",methods=["POST"])

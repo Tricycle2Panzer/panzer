@@ -1,5 +1,6 @@
 from aip import AipOcr
-from be.model import db_conn,buyer
+from be.model import db_conn
+from be.model.buyer import Buyer
 import sqlalchemy
 import os
 import cv2
@@ -99,11 +100,12 @@ class OCR(db_conn.DBConn):
                 doc += text[i]
             print(doc)
             sentence_Seg = ana.textrank(doc)
-            sentence_Seg = str(sentence_Seg)
-            sentence_Seg = sentence_Seg.strip(',')
+            # sentence_Seg = str(sentence_Seg)
+            # sentence_Seg = sentence_Seg.strip(',')
             print(sentence_Seg)
 
-            result=sentence_Seg
+            b = Buyer()
+            result = b.search_many(sentence_Seg)
 
 
         except sqlalchemy.exc.IntegrityError as e:
