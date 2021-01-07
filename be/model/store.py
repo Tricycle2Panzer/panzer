@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import create_engine,MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 import pymongo
 
 class Store:
@@ -53,20 +53,20 @@ class Store:
                 "PRIMARY KEY(search_key, search_id))"
             )
 
-            conn.execute(
-                "CREATE TABLE IF NOT EXISTS old_order( "
-                "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
-                "status INTEGER, total_price INTEGER, order_time INTEGER )"
-            )
-
-            conn.execute(
-                "CREATE TABLE IF NOT EXISTS old_order_detail( "
-                "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
-                "PRIMARY KEY(order_id, book_id))"
-            )
+            # conn.execute(
+            #     "CREATE TABLE IF NOT EXISTS old_order( "
+            #     "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
+            #     "status INTEGER, total_price INTEGER, order_time INTEGER )"
+            # )
+            #
+            # conn.execute(
+            #     "CREATE TABLE IF NOT EXISTS old_order_detail( "
+            #     "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
+            #     "PRIMARY KEY(order_id, book_id))"
+            # )
 
             conn.commit()
-        except IntegrityError as e:
+        except SQLAlchemyError as e:
             logging.error(e)
             conn.rollback()
 
