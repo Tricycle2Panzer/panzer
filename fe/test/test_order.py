@@ -1,11 +1,18 @@
 import pytest
 
 from fe.test.gen_book_data import GenBook
-from fe.access.new_buyer import register_new_buyer
+from fe.access.new_buyer import register_new_buyer_auth
 from fe.access.new_seller import register_new_seller
 from fe.access import buyer,auth
 from fe import conf
 import uuid
+
+import time
+
+import pytest
+
+from fe.access import auth
+from fe import conf
 
 
 class TestSendBooks:
@@ -15,10 +22,11 @@ class TestSendBooks:
         self.store_id = "test_send_books_store_id_{}".format(str(uuid.uuid1()))
         self.buyer_id = "test_send_books_buyer_id_{}".format(str(uuid.uuid1()))
         self.password = self.seller_id
-        self.buyer = register_new_buyer(self.buyer_id, self.password)
+        self.buyer,self.auth = register_new_buyer_auth(self.buyer_id, self.password)
         # self.seller = register_new_seller(self.seller_id, self.seller_id)
         self.gen_book = GenBook(self.seller_id, self.store_id)
         self.seller = self.gen_book.get_seller()
+
         yield
 
     # def test_non_exist_order_id(self):
@@ -138,6 +146,73 @@ class TestSendBooks:
         list=["三毛+","袁氏++"]
         code, result = self.buyer.search_many(list)
         assert result==[]
+
+    def test_processing_order(self):#下单后查询当前订单
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code,result = self.auth.processing_order(self.buyer_id)
+        assert code == 200
+
+    def test_processing_order_sent(self):#发货后查询当前订单
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code,result = self.auth.processing_order(self.buyer_id)
+        assert code == 200
+
+
+    def test_processing_order_receive(self):#收货后查询当前订单，为空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        code, result = self.auth.processing_order(self.buyer_id)
+        assert result==['NO Processing Order']
+
+    def test_history_order(self):#下单后查询历史订单，空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code,result = self.auth.history_order(self.buyer_id)
+        assert result == []
+
+    def test_history_order_sent(self):#发货后查询历史订单，空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code,result = self.auth.history_order(self.buyer_id)
+        assert result == []
+
+
+    def test_history_order_receive(self):#收货后查询历史订单
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        code, result = self.auth.history_order(self.buyer_id)
+        assert code == 200
+
+    def test_recommend_empty(self):  # 无历史订单，推荐为空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, result = self.auth.recommend(self.buyer_id)
+        assert result == []
+
+    def test_recommend_ok(self):  # 推荐成功
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        code, result = self.auth.history_order(self.buyer_id)
+        code, result = self.auth.recommend(self.buyer_id)
+        assert code == 200
+
 
 
 
