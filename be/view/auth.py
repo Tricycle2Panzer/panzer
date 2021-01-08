@@ -66,3 +66,10 @@ def check_history_orders():
     u = user.User()
     code, message, result = u.history_order(user_id=user_id)
     return jsonify({"message": message, "result": result}), code
+
+@bp_auth.route("/recommend", methods=["POST"])
+def check_recommend():
+    user_id = request.json.get("user_id", "")
+    u = user.User()
+    code, message, result = u.recommend(user_id=user_id)
+    return jsonify({"message": message, "result": result}), code
