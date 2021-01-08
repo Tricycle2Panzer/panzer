@@ -66,7 +66,7 @@ def cancel():
 @bp_buyer.route("/search", methods=["POST"])
 def search():
     search_key: str = request.json.get("search_key")
-    page: str = request.json.get("page")
+    page: int = request.json.get("page")
     b = Buyer()
     code, message, result = b.search(search_key, page)
     return jsonify({"message": message, "result": result}), code

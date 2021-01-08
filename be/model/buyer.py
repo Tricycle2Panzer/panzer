@@ -10,7 +10,7 @@ from be.model.order import Order
 class Buyer(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
-        page_size = 3
+        self.page_size = 3
 
     # 用户下单 买家用户ID,商铺ID,书籍购买列表(书籍购买列表,购买数量)
     def new_order(self, user_id: str, store_id: str, id_and_count: [(str, int)]) -> (int, str, str):
