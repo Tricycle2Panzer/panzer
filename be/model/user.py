@@ -4,6 +4,7 @@ import logging
 from be.model import error
 from be.model import db_conn
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from pymongo.errors import PyMongoError
 
 # encode a json string like:
 #   {
@@ -167,3 +168,62 @@ class User(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
+    def processing_order(self, user_id):
+        try:
+            if not self.user_id_exist(user_id):
+                return error.error_non_exist_user_id(user_id)
+
+            result = []
+            cursor = self.conn.execute(
+                "SELECT order_id, store_id, status, total_price, order_time FROM new_order WHERE user_id = :user_id ",
+                {"user_id": user_id, })
+            if cursor.rowcount != 0:
+                rows = cursor.fetchall()
+                for row in rows:
+                    order = {
+                        "order_id": row[0],
+                        "store_id": row[1],
+                        "status": row[2],
+                        "total_price": row[3],  # 总价
+                        "order_time": row[4]  # 时间戳，改成时间
+                    }
+                    books = []
+                    cursor = self.conn.execute(
+                        "SELECT book_id, count, price FROM new_order_detail WHERE order_id = :order_id ",
+                        {"order_id": order["order_id"], })
+                    bookrows = cursor.fetchall()
+                    for bookrow in bookrows:
+                        book = {
+                            "book_id": bookrow[0],
+                            "count": bookrow[1],
+                            "price": bookrow[2]
+                        }
+                        books.append(book)
+                    order["books"] = books
+                    result.append(order)
+            else:
+                result = ["NO Processing Order"]
+            self.conn.commit()
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
+
+    def history_order(self, user_id):
+        try:
+            if not self.user_id_exist(user_id):
+                return error.error_non_exist_user_id(user_id)
+
+            result = []
+            orders = self.mongo['history_order'].find({'user_id': user_id},{'_id':0})
+            for order in orders:
+                result.append(order)
+
+        except PyMongoError as e:
+            return 529, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
+
+    

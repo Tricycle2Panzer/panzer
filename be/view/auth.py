@@ -51,3 +51,18 @@ def change_password():
     u = user.User()
     code, message = u.change_password(user_id=user_id, old_password=old_password, new_password=new_password)
     return jsonify({"message": message}), code
+
+
+@bp_auth.route("/processing_order", methods=["POST"])
+def check_processing_orders():
+    user_id = request.json.get("user_id", "")
+    u = user.User()
+    code, message, result = u.processing_order(user_id=user_id)
+    return jsonify({"message": message, "result": result}), code
+
+@bp_auth.route("/history_order", methods=["POST"])
+def check_history_orders():
+    user_id = request.json.get("user_id", "")
+    u = user.User()
+    code, message, result = u.history_order(user_id=user_id)
+    return jsonify({"message": message, "result": result}), code
