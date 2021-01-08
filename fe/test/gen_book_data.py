@@ -55,3 +55,6 @@ class GenBook:
         for item in self.buy_book_info_list:
             self.buy_book_id_list.append((item[0].id, item[1]))
         return ok, self.buy_book_id_list
+
+    def get_seller(self):
+        return self.seller
