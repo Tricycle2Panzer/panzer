@@ -3,6 +3,7 @@ import logging
 from be.model import db_conn
 from be.model import error
 from sqlalchemy.exc import SQLAlchemyError
+from pymongo.errors import PyMongoError
 from be.model.times import add_unpaid_order, delete_unpaid_order, check_order_time, get_time_stamp
 from be.model.order import Order
 from be.model.nlp import encrypt
@@ -299,6 +300,19 @@ class Buyer(db_conn.DBConn):
             result = list(uni.values())
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
+
+    def get_book_info(self, bid_list):
+        try:
+            result = []
+            for bid in bid_list:
+                book = self.mongo['book'].find_one({'id': bid},{'_id':0})
+                if book != None:
+                    result.append(book)
+        except PyMongoError as e:
+            return 529, "{}".format(str(e)), []
         except BaseException as e:
             return 530, "{}".format(str(e)), []
         return 200, "ok", result

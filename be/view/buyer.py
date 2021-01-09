@@ -97,3 +97,10 @@ def get_ocr_cv():
     o = OCR()
     code, message, result=o.OCR_pic_cv()
     return jsonify({"message": message, "result": result}), code
+
+@bp_buyer.route("/get_books_info", methods=["POST"])
+def check_biiks_info():
+    book_list: list = request.json.get("books")
+    b = Buyer()
+    code, message, result = b.get_book_info(book_list)
+    return jsonify({"message": message, "result": result}), code
