@@ -316,3 +316,43 @@ class Buyer(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e)), []
         return 200, "ok", result
+
+    def search_in_store(self, store_id, search_key, page=0):
+        try:
+            print(search_key)
+            if page > 0:
+                page_lower = self.page_size * (page - 1)
+                print(page_lower)
+                cursor = self.conn.execute(
+                    "SELECT i.book_id, i.book_title, i.book_author, s.price, s.stock_level "
+                    "from invert_index i, store s, "
+                    "where i.search_key = '%s' and i.book_id = s.book_id and s.store_id = '%s' "
+                    "ORDER BY i.search_id limit '%d' offset '%d' ;"
+                    % (search_key, store_id, self.page_size, page_lower))
+            else:
+                cursor = self.conn.execute(
+                    "SELECT i.book_id, i.book_title, i.book_author, s.price, s.stock_level "
+                    "from invert_index i, store s, "
+                    "where i.search_key = '%s' and i.book_id = s.book_id and s.store_id = '%s' "
+                    "ORDER BY i.search_id ;"
+                    % (search_key, store_id))
+            rows = cursor.fetchall()
+
+            result = []
+            for row in rows:
+                book = {
+                    "bid": row[0],
+                    "title": row[1],
+                    "author": row[2],
+                    "price": row[3],
+                    "storage": row[4]
+                }
+                result.append(book)
+            print(result)
+
+            self.conn.commit()
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
