@@ -306,6 +306,7 @@ class Buyer(db_conn.DBConn):
 
     def get_book_info(self, bid_list):
         try:
+            print("bid_list",bid_list)
             result = []
             for bid in bid_list:
                 book = self.mongo['book'].find_one({'id': bid},{'_id':0})
@@ -319,20 +320,20 @@ class Buyer(db_conn.DBConn):
 
     def search_in_store(self, store_id, search_key, page=0):
         try:
-            print(search_key)
+            if not self.store_id_exist(store_id):
+                return error.error_non_exist_store_id(store_id)
             if page > 0:
                 page_lower = self.page_size * (page - 1)
-                print(page_lower)
                 cursor = self.conn.execute(
                     "SELECT i.book_id, i.book_title, i.book_author, s.price, s.stock_level "
-                    "from invert_index i, store s, "
+                    "from invert_index i, store s "
                     "where i.search_key = '%s' and i.book_id = s.book_id and s.store_id = '%s' "
                     "ORDER BY i.search_id limit '%d' offset '%d' ;"
                     % (search_key, store_id, self.page_size, page_lower))
             else:
                 cursor = self.conn.execute(
                     "SELECT i.book_id, i.book_title, i.book_author, s.price, s.stock_level "
-                    "from invert_index i, store s, "
+                    "from invert_index i, store s "
                     "where i.search_key = '%s' and i.book_id = s.book_id and s.store_id = '%s' "
                     "ORDER BY i.search_id ;"
                     % (search_key, store_id))

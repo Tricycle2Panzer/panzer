@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from fe.test.gen_book_data import GenBook
@@ -213,48 +215,84 @@ class TestSendBooks:
         code, result = self.auth.recommend(self.buyer_id)
         assert code == 200
 
+    def test_seller_processing_order_ok(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code,result = self.seller.store_processing_order(self.seller_id)
+        assert code == 200
+
+    def test_seller_processing_order_sent(self):#发货后查询当前订单
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code,result = self.seller.store_processing_order(self.seller_id)
+        assert code == 200
 
 
+    def test_seller_processing_order_receive(self):#收货后查询当前订单，为空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        code,result = self.seller.store_processing_order(self.seller_id)
+        assert result==['NO Processing Order']
+
+    def test_seller_history_order(self):#下单后查询历史订单，空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code,result = self.seller.store_history_order(self.store_id)
+        assert result == []
+
+    def test_seller_history_order_sent(self):#发货后查询历史订单，空
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code,result = self.seller.store_history_order(self.store_id)
+        assert result == []
 
 
-    # def test_receive_pwd_error(self):#receive book未检查密码
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
-    #     assert ok
-    #     code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
-    #     code = self.seller.send_books(self.store_id,order_id)
-    #     code = self.buyer.receive_books(self.buyer_id, self.password+ "_x", order_id)
-    #     assert code != 200
+    def test_seller_history_order_receive(self):#收货后查询历史订单
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.seller.send_books(self.store_id, order_id)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        code,result = self.seller.store_history_order(self.store_id)
+        assert code == 200
+
+    def test_get_book_info_ok(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        code, book_title=self.buyer.get_books_info(buy_book_id_list[0])
+        assert code == 200
+
+    def test_get_book_info_error(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=True, low_stock_level=False)
+        code, book_title=self.buyer.get_books_info(buy_book_id_list[0])
+        assert book_title==[]
+
+    def test_search_in_store_ok(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        _, book_title=self.buyer.get_books_info(buy_book_id_list[0])
+        dict = book_title[0]
+        search_key=dict["title"]
+        store_id=self.store_id
+        page=0
+        code, result = self.buyer.search_in_store(store_id,search_key,page)
+        assert code == 200
+
+    def test_search_in_store_page_ok(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        _, book_title=self.buyer.get_books_info(buy_book_id_list[0])
+        dict = book_title[0]
+        search_key=dict["title"]
+        store_id=self.store_id
+        page=1
+        code, result = self.buyer.search_in_store(store_id,search_key,page)
+        assert code == 200
 
 
-
-
-    # def test_non_exist_book_id(self):
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=True, low_stock_level=False)
-    #     assert ok
-    #     code, _ = self.buyer.new_order(self.store_id, buy_book_id_list)
-    #     assert code != 200
-    #
-    # def test_low_stock_level(self):
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=True)
-    #     assert ok
-    #     code, _ = self.buyer.new_order(self.store_id, buy_book_id_list)
-    #     assert code != 200
-    #
-    # def test_ok(self):
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
-    #     assert ok
-    #     code, _ = self.buyer.new_order(self.store_id, buy_book_id_list)
-    #     assert code == 200
-    #
-    # def test_non_exist_user_id(self):
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
-    #     assert ok
-    #     self.buyer.user_id = self.buyer.user_id + "_x"
-    #     code, _ = self.buyer.new_order(self.store_id, buy_book_id_list)
-    #     assert code != 200
-    #
-    # def test_non_exist_store_id(self):
-    #     ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
-    #     assert ok
-    #     code, _ = self.buyer.new_order(self.store_id + "_x", buy_book_id_list)
-    #     assert code != 200
