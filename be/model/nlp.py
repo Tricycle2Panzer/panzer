@@ -1,6 +1,7 @@
 import jieba.analyse as ana
 import jieba
 import re
+import hashlib
 
 def get_keyword(text):
     if isinstance(text,str) == False:
@@ -73,3 +74,9 @@ def parse_name(text):
             pre = i+1
     names.append(text[pre:l])
     return names
+
+def encrypt(password):
+    pw = "19991205" + password + "zjcSQS tq"
+    hash = hashlib.sha256()
+    hash.update(pw.encode('utf-8'))
+    return hash.hexdigest()

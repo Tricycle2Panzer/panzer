@@ -5,7 +5,7 @@ from be.model import error
 from sqlalchemy.exc import SQLAlchemyError
 from be.model.times import add_unpaid_order, delete_unpaid_order, check_order_time, get_time_stamp
 from be.model.order import Order
-
+from be.model.nlp import encrypt
 
 class Buyer(db_conn.DBConn):
     def __init__(self):
@@ -91,12 +91,12 @@ class Buyer(db_conn.DBConn):
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
-            if check_order_time(order_time) == False:
-                self.conn.commit()
-                delete_unpaid_order(order_id)
-                o = Order()
-                o.cancel_order(order_id)
-                return error.error_invalid_order_id()
+            # if check_order_time(order_time) == False:
+            #     self.conn.commit()
+            #     delete_unpaid_order(order_id)
+            #     o = Order()
+            #     o.cancel_order(order_id)
+            #     return error.error_invalid_order_id()
 
             cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;",
                                   {"buyer_id": buyer_id, })
@@ -104,7 +104,7 @@ class Buyer(db_conn.DBConn):
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
             balance = row[0]
-            if password != row[1]:
+            if encrypt(password) != row[1]:
                 return error.error_authorization_fail()
 
             cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
@@ -200,7 +200,7 @@ class Buyer(db_conn.DBConn):
             if row is None:
                 return error.error_authorization_fail()
 
-            if row[0] != password:
+            if row[0] != encrypt(password):
                 return error.error_authorization_fail()
 
             cursor = self.conn.execute(

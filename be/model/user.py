@@ -5,6 +5,7 @@ from be.model import error
 from be.model import db_conn
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from pymongo.errors import PyMongoError
+from be.model.nlp import encrypt
 
 # encode a json string like:
 #   {
@@ -58,6 +59,7 @@ class User(db_conn.DBConn):
         try:
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
+            password = encrypt(password)
             self.conn.execute(
                 "INSERT into users(user_id, password, balance, token, terminal) "
                 "VALUES (:uid, :pw, 0, :tok, :ter);",
@@ -84,7 +86,7 @@ class User(db_conn.DBConn):
         if row is None:
             return error.error_authorization_fail()
 
-        if password != row[0]:
+        if encrypt(password) != row[0]:
             return error.error_authorization_fail()
 
         return 200, "ok"
@@ -155,6 +157,7 @@ class User(db_conn.DBConn):
 
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
+            new_password = encrypt(new_password)
             cursor = self.conn.execute(
                 "UPDATE users set password = :pw, token= :tok, terminal = :ter where user_id = :uid",
                 {'pw':new_password, 'tok':token, 'ter':terminal, 'uid':user_id})
