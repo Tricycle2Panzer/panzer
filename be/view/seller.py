@@ -51,3 +51,17 @@ def send_books():
     code, message = s.send_books(store_id, order_id)
 
     return jsonify({"message": message}), code
+
+@bp_seller.route("/store_processing_order", methods=["POST"])
+def check_store_processing_orders():
+    seller_id = request.json.get("seller_id", "")
+    s = seller.Seller()
+    code, message, result = s.store_processing_order(seller_id)
+    return jsonify({"message": message, "result": result}), code
+
+@bp_seller.route("/store_history_order", methods=["POST"])
+def check_store_history_orders():
+    store_id = request.json.get("store_id", "")
+    s = seller.Seller()
+    code, message, result = s.store_history_order(store_id)
+    return jsonify({"message": message, "result": result}), code
