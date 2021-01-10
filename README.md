@@ -364,9 +364,13 @@ python app.py
 
 ### 6.1 利用pytest和coverage测试和评估代码
 
-* 
+除基础测试35个全部通过外，为进阶功能编写了35个测试，全部通过。
 
+* #### coverage test
 
+<img src="/Users/sunqiushi/Desktop/panzer/static/coverage-test1.png" alt="coverage-test1" style="zoom:66%;" />
+
+<img src="/Users/sunqiushi/Desktop/panzer/static/coverage-test2.png" alt="coverage-test2" style="zoom:66%;" />
 
 ### 6.2 测试接口&样例
 
