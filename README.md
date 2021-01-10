@@ -82,7 +82,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201548206.png" alt="image-20210109201548206" style="zoom:80%;" />
+![table-structure](static/inverted-index-table-structure.png)
 
 
 
@@ -94,7 +94,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201631033.png" alt="image-20210109201631033" style="zoom:80%;" />
+![new-order-table](static/new-order-table.png)
 
 #### 3.3.3 new_order_detail_table
 
@@ -104,7 +104,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201711754.png" alt="image-20210109201711754" style="zoom:80%;" />
+![new-order-detail](static/new-order-detail.png)
 
 
 
@@ -116,7 +116,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201838883.png" alt="image-20210109201838883" style="zoom:80%;" />
+![store-table](static/store-table.png)
 
 #### 3.3.5 user_store table
 
@@ -126,7 +126,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201924403.png" alt="image-20210109201924403" style="zoom:80%;" />
+![user-store-table](static/user-store-table.png)
 
 #### 3.3.6 users table
 
@@ -136,7 +136,7 @@ python app.py
 
 * **表格结构**
 
-<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201950219.png" alt="image-20210109201950219" style="zoom:80%;" />
+![user-table](static/user-table.png)
 
 
 
@@ -352,11 +352,13 @@ python app.py
 
 ## 五. 版本控制
 
-<img src="/Users/sunqiushi/Desktop/panzer/static/git-status-improve.png" alt="git-status-improve" style="zoom:50%;" />
+#### 活跃branch: improve
 
-<img src="/static/git-status-improve.png" alt="git-status-improve" style="zoom:50%;" />
+<img src="static/git-status-improve.png" alt="git-status-improve" style="zoom:50%;" />
 
-<img src="/Users/sunqiushi/Desktop/panzer/static/git-status-modification.png" alt="git-status-modification" style="zoom:50%;" />
+#### 活跃branch: modification
+
+<img src="static/git-status-modification.png" alt="git-status-modification" style="zoom:50%;" />
 
 ## 六. 测试
 
@@ -382,8 +384,6 @@ python app.py
 |          |               |              |
 |          |               |              |
 |          |               |              |
-
-#### 
 
 
 
