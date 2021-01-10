@@ -56,7 +56,7 @@ class Order(db_conn.DBConn):
                 #     "INSERT INTO old_order_detail(order_id, book_id, count, price) "
                 #     "VALUES(:uid, :book_id, :count, :price)",
                 #     {"uid": order_id, "book_id": book_id, "count": count, "price": price})
-            self.conn.commit()
+            self.commit = self.conn.commit()
             order["books"] = books
             self.mongo['history_order'].insert_one(order)
             print("cansql")
