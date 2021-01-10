@@ -20,47 +20,36 @@ class Store:
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS users ("
                 "user_id TEXT PRIMARY KEY, password TEXT NOT NULL, "
-                "balance INTEGER NOT NULL DEFAULT 0 CHECK (balance >= 0), "
-                "token TEXT NOT NULL, terminal TEXT NOT NULL);"
+                "balance INTEGER NOT NULL, token TEXT, terminal TEXT);"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS user_store("
-                "user_id TEXT, store_id TEXT , PRIMARY KEY(user_id, store_id)), "
-                "FOREIGN KEY (user_id) REFERENCES users(user_id) );"
+                "user_id TEXT, store_id TEXT , PRIMARY KEY(user_id, store_id));"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS store( "
-                "store_id TEXT, book_id TEXT, "
-                "stock_level INTEGER NOT NULL DEFAULT 0 CHECK (stock_level >= 0), "
-                "price INTEGER NOT NULL CHECK (price > 0), "
-                "PRIMARY KEY(store_id, book_id)) "
-                "FOREIGN KEY (store_id) REFERENCES user_store(store_id) );"
+                "store_id TEXT, book_id TEXT, stock_level INTEGER, price INTEGER,"
+                " PRIMARY KEY(store_id, book_id))"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order( "
                 "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT, "
-                "status INTEGER NOT NULL DEFAULT 1, "
-                "total_price INTEGER NOT NULL CHECK (total_price >= 0), "
-                "order_time INTEGER NOT NULL, "
-                "FOREIGN KEY (user_id) REFERENCES users(user_id), "
-                "FOREIGN KEY (store_id) REFERENCES user_store(store_id) );"
+                "status INTEGER DEFAULT 1, total_price INTEGER, order_time INTEGER )"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order_detail( "
-                "order_id TEXT, book_id TEXT, count INTEGER NOT NULL DEFAULT 1 CHECK (count > 0), "
-                "price INTEGER NOT NULL CHECK (price > 0),  "
-                "PRIMARY KEY(order_id, book_id)"
-                "FOREIGN KEY (order_id) REFERENCES new_order(order_id))"
+                "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
+                "PRIMARY KEY(order_id, book_id))"
             )
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS invert_index( "
-                "search_key TEXT, search_id serial, book_id TEXT NOT NULL, "
-                "book_title TEXT NOT NULL, book_author TEXT, "
+                "search_key TEXT, search_id serial, book_id TEXT, "
+                "book_title TEXT, book_author TEXT, "
                 "PRIMARY KEY(search_key, search_id))"
             )
 
