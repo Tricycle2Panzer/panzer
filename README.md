@@ -64,6 +64,13 @@ python app.py
 
 ### 3.1 总体设计思路
 
+主要的实体类有：用户，订单，书店，书籍。
+
+用户的主要操作有：
+
+1. 查询
+2. 下订单
+
 
 
 ### 3.2 ER图
@@ -152,7 +159,7 @@ python app.py
 
 
 
-#### 3.4.3 属性 or成表
+#### 3.4.3 属性 or 成表
 
 
 
@@ -338,7 +345,18 @@ python app.py
 
 #### 4.3.8 自动取消订单
 
+自动取消订单运用了一种“软实时”的思想
 
+* 功能实现
+
+  1. 维护一个全局列表，用来记录每个订单的起始时间（下单时间）
+  2. 使用datetime等时间工具记录用户下单时的时间，存储于全局列表
+  3. 利用Apscheduler调度器，实现每30分钟检查一次全局列表中订单的状态
+  4. 若订单未超时，不做出任何动作，若被检查到超时，取消这笔订单。在用户下单时，会再次确认支付时间。
+
+* 性能分析
+
+  这是一种类似“软实时”的订单状态维护方法，可以将超时取消功能的开销降低很多。不专门起一个线程“盯着”用户的订单，而是每一个周期检查一次，取消掉被检查到超时的订单。在用户下单时，会再次检查是否超时，若超时则直接取消这笔订单。
 
 #### 4.3.9 搜索
 
@@ -364,15 +382,21 @@ python app.py
 
 ### 6.1 利用pytest和coverage测试和评估代码
 
-除基础测试35个全部通过外，为进阶功能编写了35个测试，全部通过。
+本项目覆盖率在90%左右
 
-* #### coverage test
+* #### coverage test 代码覆盖率评估
 
-<img src="/Users/sunqiushi/Desktop/panzer/static/coverage-test1.png" alt="coverage-test1" style="zoom:66%;" />
+<img src="static/coverage-test1.png" alt="coverage-test1" style="zoom:66%;" />
 
-<img src="/Users/sunqiushi/Desktop/panzer/static/coverage-test2.png" alt="coverage-test2" style="zoom:66%;" />
+<img src="static/coverage-test2.png" alt="coverage-test2" style="zoom:66%;" />
 
 ### 6.2 测试接口&样例
+
+#### 测试结果
+
+基础测试35个全部通过，除此之外，我们为进阶功能编写了35个测试，也全部通过
+
+<img src="static/test-result-part.png" alt="test-result-part" style="zoom:50%;" />
 
 #### 6.2.1 
 
