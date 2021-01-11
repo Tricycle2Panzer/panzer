@@ -7,10 +7,12 @@ import cv2
 import time
 import jieba.analyse as ana
 import re
+
 # 定义常量
 APP_ID = '14544448'
 API_KEY = 'yRZGUXAlCd0c9vQj1kAjBEfY'
 SECRET_KEY = 'sc0DKGy7wZ9MeWFGZnbscbRyoDB2IQlj'
+
 # 初始化AipFace对象
 client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
 
@@ -46,7 +48,7 @@ class OCR(db_conn.DBConn):
 
             ret, frame = cap.read()  # 获取相框
             frame = frame[crop_h_start:crop_h_start + w, crop_w_start:crop_w_start + w]  # 展示相框
-            # frame=cv2.flip(frame,1,dst=None) 
+            # frame=cv2.flip(frame,1,dst=None)
             cv2.imshow("capture", frame)
             action = cv2.waitKey(1) & 0xFF
             time.sleep(3)
@@ -64,12 +66,14 @@ class OCR(db_conn.DBConn):
 
             print(res)
 
-            result = []
+            results = []
             for item in res['words_result']:
                 print(item['words'])
-                result.append(item['words'])
+                results.append(item['words'])
 
-            print(result)
+            print(results)
+            b = Buyer()
+            result = b.search_many(results)
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -101,8 +105,11 @@ class OCR(db_conn.DBConn):
             # sentence_Seg = str(sentence_Seg)
             # sentence_Seg = sentence_Seg.strip(',')
             print(sentence_Seg)
+
             b = Buyer()
             result = b.search_many(sentence_Seg)
+
+
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
