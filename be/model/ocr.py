@@ -7,12 +7,10 @@ import cv2
 import time
 import jieba.analyse as ana
 import re
-
 # 定义常量
 APP_ID = '14544448'
 API_KEY = 'yRZGUXAlCd0c9vQj1kAjBEfY'
 SECRET_KEY = 'sc0DKGy7wZ9MeWFGZnbscbRyoDB2IQlj'
-
 # 初始化AipFace对象
 client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
 
@@ -103,11 +101,8 @@ class OCR(db_conn.DBConn):
             # sentence_Seg = str(sentence_Seg)
             # sentence_Seg = sentence_Seg.strip(',')
             print(sentence_Seg)
-
             b = Buyer()
             result = b.search_many(sentence_Seg)
-
-
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:

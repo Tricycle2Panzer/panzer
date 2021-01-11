@@ -349,7 +349,7 @@ python app.py
 
 * 功能实现
 
-  1. 维护一个全局列表，用来记录每个订单的起始时间（下单时间）
+  1. 维护一个全局字典，用来记录每个订单的起始时间（下单时间）
   2. 使用datetime等时间工具记录用户下单时的时间，存储于全局列表
   3. 利用Apscheduler调度器，实现每30分钟检查一次全局列表中订单的状态
   4. 若订单未超时，不做出任何动作，若被检查到超时，取消这笔订单。在用户下单时，会再次确认支付时间。
@@ -357,6 +357,70 @@ python app.py
 * 性能分析
 
   这是一种类似“软实时”的订单状态维护方法，可以将超时取消功能的开销降低很多。不专门起一个线程“盯着”用户的订单，而是每一个周期检查一次，取消掉被检查到超时的订单。在用户下单时，会再次检查是否超时，若超时则直接取消这笔订单。
+
+实现方式：
+
+```python
+time_limit = 30 # 订单存活时间
+unpaid_orders = {}
+```
+
+使用一个全局字典记录订单时间状况，并设定未付款订单的最大存活时间
+
+```python
+#优点：通过维护全局数组to_be_paid，没有额外新启线程，代价降到最低
+def add_unpaid_order(orderID):
+    unpaid_orders[orderID] = get_time_stamp()
+    print("add successfully")
+    print(unpaid_orders)
+    return 200, "ok"
+def delete_unpaid_order(orderID):
+    try:
+        unpaid_orders.pop(orderID)
+        print(unpaid_orders)
+    except BaseException as e:
+        return 530, "{}".format(str(e))
+    return 200, "ok"
+def check_order_time(order_time):
+    cur_time = get_time_stamp()
+    time_diff = cur_time - order_time
+    if time_diff > time_limit:
+        return False
+    else:
+        return True
+```
+
+每当删除任务的周期到来，就对全局字典执行一次探查，将未在指定时间付款的订单状态改为“取消”
+
+```python
+def time_exceed_delete():
+    del_temp=[]
+    o = Order()
+    print("new cycle start")
+    for (oid,tim) in unpaid_orders.items():
+        if check_order_time(tim) == False:
+            del_temp.append(oid)  # remenber, not to append the index of the array, we need the orderID
+    for oid in del_temp:
+        delete_unpaid_order(oid)
+        o.cancel_order(oid)
+    return 0
+```
+
+通过配置一个apscheduler调度器来执行定时任务
+
+```python
+class Config(object):
+    JOBS = [
+        {
+            'id': 'soft_real_time',
+            'func': '__main__:time_exceed_delete',
+            'trigger': 'interval',
+            'seconds': 30,
+        }
+    ]
+```
+
+
 
 #### 4.3.9 搜索
 
