@@ -12,14 +12,14 @@ unpaid_orders = {}
 #优点：通过维护全局数组to_be_paid，没有额外新启线程，代价降到最低
 def add_unpaid_order(orderID):
     unpaid_orders[orderID] = get_time_stamp()
-    print("add successfully")
-    print(unpaid_orders)
+    # print("add successfully")
+    # print(unpaid_orders)
     return 200, "ok"
 
 def delete_unpaid_order(orderID):
     try:
         unpaid_orders.pop(orderID)
-        print(unpaid_orders)
+        # print(unpaid_orders)
     except BaseException as e:
         return 530, "{}".format(str(e))
     return 200, "ok"

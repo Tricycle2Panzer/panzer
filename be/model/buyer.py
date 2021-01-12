@@ -174,7 +174,7 @@ class Buyer(db_conn.DBConn):
             if buyer_id != user_id:
                 return error.error_authorization_fail()
             if status != 3:
-                error.error_invalid_order_status(order_id)
+                return error.error_invalid_order_status(order_id)
 
             cursor = self.conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
                                   {"store_id": store_id, })

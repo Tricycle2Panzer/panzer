@@ -28,6 +28,7 @@ class TestSendBooks:
         # self.seller = register_new_seller(self.seller_id, self.seller_id)
         self.gen_book = GenBook(self.seller_id, self.store_id)
         self.seller = self.gen_book.get_seller()
+        self.temp_order = None
 
         yield
 
@@ -45,6 +46,7 @@ class TestSendBooks:
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
         assert ok
         code0, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.add_funds(1000000000)
         code = self.buyer.payment(order_id)
         code = self.seller.send_books(self.store_id,order_id)
         assert code == 200
@@ -75,9 +77,18 @@ class TestSendBooks:
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
         assert ok
         code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.add_funds(1000000000)
+        code = self.buyer.payment(order_id)
         code = self.seller.send_books(self.store_id,order_id)
         code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
         assert code == 200
+
+    def test_receive_books_wstat(self):
+        ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
+        assert ok
+        code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
+        assert code != 200
 
     def test_receive_non_exist_buyer_id(self):
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
@@ -177,6 +188,8 @@ class TestSendBooks:
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
         assert ok
         code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.add_funds(1000000000)
+        code = self.buyer.payment(order_id)
         code = self.seller.send_books(self.store_id, order_id)
         code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
         code, result = self.auth.processing_order(self.buyer_id)
@@ -227,6 +240,8 @@ class TestSendBooks:
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
         assert ok
         code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.add_funds(1000000000)
+        code = self.buyer.payment(order_id)
         code,result = self.seller.store_processing_order(self.seller_id)
         assert code == 200
 
@@ -243,6 +258,8 @@ class TestSendBooks:
         ok, buy_book_id_list = self.gen_book.gen(non_exist_book_id=False, low_stock_level=False)
         assert ok
         code, order_id = self.buyer.new_order(self.store_id, buy_book_id_list)
+        code = self.buyer.add_funds(1000000000)
+        code = self.buyer.payment(order_id)
         code = self.seller.send_books(self.store_id, order_id)
         code = self.buyer.receive_books(self.buyer_id, self.password, order_id)
         code,result = self.seller.store_processing_order(self.seller_id)
