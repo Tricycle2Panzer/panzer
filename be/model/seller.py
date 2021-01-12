@@ -131,12 +131,18 @@ class Seller(db_conn.DBConn):
         return 200, "ok"
 
     # 卖家发货
-    def send_books(self,seller_id,order_id):
+    def send_books(self,store_id,order_id):
         try:
-            if not self.user_id_exist(seller_id):
-                return error.error_non_exist_user_id(seller_id)
-            if not self.order_id_exist(order_id):  #增加order_id不存在的错误处理
+            if not self.store_id_exist(store_id):
+                return error.error_non_exist_store_id(store_id)
+            if not self.order_id_exist(order_id):   #增加order_id不存在的错误处理
                 return error.error_invalid_order_id(order_id)
+            cursor = self.conn.execute(
+                "SELECT status FROM new_order where order_id = '%s' ;" % (order_id))
+            row = cursor.fetchone()
+            status = row[0]
+            if status != 2:
+                return error.error_invalid_order_status(order_id)
 
             self.conn.execute(
                 "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))
@@ -146,3 +152,62 @@ class Seller(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+
+    def store_processing_order(self, seller_id):
+        try:
+            if not self.user_id_exist(seller_id):
+                return error.error_non_exist_user_id(seller_id)
+
+            result = []
+            cursor = self.conn.execute(
+                "SELECT o.order_id, o.store_id, o.status, o.total_price, o.order_time "
+                "FROM new_order o, user_store s "
+                "WHERE s.user_id = :user_id AND s.store_id = o.store_id ",
+                {"user_id": seller_id, })
+            if cursor.rowcount != 0:
+                rows = cursor.fetchall()
+                for row in rows:
+                    order = {
+                        "order_id": row[0],
+                        "store_id": row[1],
+                        "status": row[2],
+                        "total_price": row[3],  # 总价
+                        "order_time": row[4]  # 时间戳，改成时间
+                    }
+                    books = []
+                    cursor = self.conn.execute(
+                        "SELECT book_id, count FROM new_order_detail WHERE order_id = :order_id ",
+                        {"order_id": order["order_id"], })
+                    bookrows = cursor.fetchall()
+                    for bookrow in bookrows:
+                        book = {
+                            "book_id": bookrow[0],
+                            "count": bookrow[1]
+                        }
+                        books.append(book)
+                    order["books"] = books
+                    result.append(order)
+            else:
+                result = ["NO Processing Order"]
+            self.conn.commit()
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result
+
+    def store_history_order(self, store_id):
+        try:
+            if not self.store_id_exist(store_id):
+                return error.error_non_exist_store_id(store_id)
+
+            result = []
+            orders = self.mongo['history_order'].find({'store_id': store_id}, {'_id': 0})
+            for order in orders:
+                result.append(order)
+
+        except PyMongoError as e:
+            return 529, "{}".format(str(e)), []
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", result

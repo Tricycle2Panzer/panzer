@@ -1,10 +1,10 @@
 # 数据管理系统作业——Bookstore实验报告
 
-| 课程名称：当代数据管理系统 | 项目名称：bookstore   | 指导老师：周烜 |
-| -------------------------- | --------------------- | -------------- |
-| **姓名：汤琼**             | **学号：10182100106** | **年级：2018** |
-| **姓名：郑佳辰**           | **学号：10182100359** | **年级：2018** |
-| **姓名：孙秋实**           | **学号：10185501402** | **年级：2018** |
+| 课程名称：数据管理系统 | 项目名称：bookstore   | 指导老师：周烜 |
+| ---------------------- | --------------------- | -------------- |
+| **姓名：汤琼**         | **学号：10182100106** | **年级：2018** |
+| **姓名：郑佳辰**       | **学号：**            | **年级：2018** |
+| **姓名：孙秋实**       | **学号：10185501402** | **年级：2018** |
 
 [TOC]
 
@@ -46,7 +46,9 @@
 
 数据库初始化 （数据库已初始化完成，可直接运行下一步）//这边要改
 
-1. MongoDB文档集需要自行建立（2张表）
+```python
+python init.py
+```
 
 运行
 
@@ -62,15 +64,15 @@ python app.py
 
 ### 3.1 总体设计思路
 
-为了保证...用了什么...
-
 
 
 ### 3.2 ER图
 
-<img src="static/BookstoreER.png" alt="BookstoreER" style="zoom:50%;" />
+
 
 ### 3.3 关系模式
+
+
 
 #### 3.3.1 invert_index table
 
@@ -80,7 +82,7 @@ python app.py
 
 * **表格结构**
 
-![table-structure](static/inverted-index-table-structure.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201548206.png" alt="image-20210109201548206" style="zoom:80%;" />
 
 
 
@@ -92,7 +94,7 @@ python app.py
 
 * **表格结构**
 
-![new-order-table](static/new-order-table.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201631033.png" alt="image-20210109201631033" style="zoom:80%;" />
 
 #### 3.3.3 new_order_detail_table
 
@@ -102,7 +104,7 @@ python app.py
 
 * **表格结构**
 
-![new-order-detail](static/new-order-detail.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201711754.png" alt="image-20210109201711754" style="zoom:80%;" />
 
 
 
@@ -114,7 +116,7 @@ python app.py
 
 * **表格结构**
 
-![store-table](static/store-table.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201838883.png" alt="image-20210109201838883" style="zoom:80%;" />
 
 #### 3.3.5 user_store table
 
@@ -124,7 +126,7 @@ python app.py
 
 * **表格结构**
 
-![user-store-table](static/user-store-table.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201924403.png" alt="image-20210109201924403" style="zoom:80%;" />
 
 #### 3.3.6 users table
 
@@ -134,7 +136,7 @@ python app.py
 
 * **表格结构**
 
-![user-table](static/user-table.png)
+<img src="C:\Users\汤琼\AppData\Roaming\Typora\typora-user-images\image-20210109201950219.png" alt="image-20210109201950219" style="zoom:80%;" />
 
 
 
@@ -150,7 +152,7 @@ python app.py
 
 
 
-#### 3.4.3 属性 or 成表
+#### 3.4.3 属性 or成表
 
 
 
@@ -171,7 +173,6 @@ python app.py
 #### 4.1.1 注册
 
 * 功能实现
-
   1. 根据 user_id 在 users 表中查询用户是否已经存在
   2. 若不存在，则插入新用户 (user_id, password, balance, token, terminal) 到 users 表中
 
@@ -311,7 +312,7 @@ python app.py
   2. 查询订单是否超时
   3. 若订单未超时，则根据 buyer_id 在 users table 中获取买家余额和密码
   4. 根据 store_id 在 user_store table 中查询卖家 seller_id
-  5. 在 users table 中更新买家的余额
+  5.  在 users table 中更新买家的余额
   6. 在 new_order table 中更新订单状态 status=2
 
 * 性能分析
@@ -336,238 +337,33 @@ python app.py
 
 #### 4.3.8 自动取消订单
 
-自动取消订单运用了一种“软实时”的思想
-
-* 功能实现
-
-  1. 维护一个全局字典，用来记录每个订单的起始时间（下单时间）
-  2. 使用datetime等时间工具记录用户下单时的时间，存储于全局列表
-  3. 利用Apscheduler调度器，实现每30分钟检查一次全局列表中订单的状态
-  4. 若订单未超时，不做出任何动作，若被检查到超时，取消这笔订单。在用户下单时，会再次确认支付时间。
-
-* 性能分析
-
-  这是一种类似“软实时”的订单状态维护方法，可以将超时取消功能的开销降低很多。不专门起一个线程“盯着”用户的订单，而是每一个周期检查一次，取消掉被检查到超时的订单。在用户下单时，会再次检查是否超时，若超时则直接取消这笔订单。
-
-实现方式：
-
-```python
-time_limit = 30 # 订单存活时间
-unpaid_orders = {}
-```
-
-使用一个全局字典记录订单时间状况，并设定未付款订单的最大存活时间
-
-```python
-#优点：通过维护全局数组to_be_paid，没有额外新启线程，代价降到最低
-def add_unpaid_order(orderID):
-    unpaid_orders[orderID] = get_time_stamp()
-    print("add successfully")
-    print(unpaid_orders)
-    return 200, "ok"
-def delete_unpaid_order(orderID):
-    try:
-        unpaid_orders.pop(orderID)
-        print(unpaid_orders)
-    except BaseException as e:
-        return 530, "{}".format(str(e))
-    return 200, "ok"
-def check_order_time(order_time):
-    cur_time = get_time_stamp()
-    time_diff = cur_time - order_time
-    if time_diff > time_limit:
-        return False
-    else:
-        return True
-```
-
-每当删除任务的周期到来，就对全局字典执行一次探查，将未在指定时间付款的订单状态改为“取消”
-
-```python
-def time_exceed_delete():
-    del_temp=[]
-    o = Order()
-    print("new cycle start")
-    for (oid,tim) in unpaid_orders.items():
-        if check_order_time(tim) == False:
-            del_temp.append(oid)  # remenber, not to append the index of the array, we need the orderID
-    for oid in del_temp:
-        delete_unpaid_order(oid)
-        o.cancel_order(oid)
-    return 0
-```
-
-通过配置一个apscheduler调度器来执行定时任务
-
-```python
-class Config(object):
-    JOBS = [
-        {
-            'id': 'soft_real_time',
-            'func': '__main__:time_exceed_delete',
-            'trigger': 'interval',
-            'seconds': 30,
-        }
-    ]
-```
-
 
 
 #### 4.3.9 搜索
 
-##### 亮点：OCR搜索
-
-我们调用了百度OCR的API来进行图书搜索，具体操作方法如下所示（以概率论与数理统计为例），我们尝试调用OCR功能在书库中检索这本书。
-
-<img src="static/stats-cover.png" alt="stats-cover" style="zoom:13%;" />
 
 
 
-##### Remark：需要摄像头功能（最好光线充足）
-
-```python
-APP_ID = '14544448'
-API_KEY = 'yRZGUXAlCd0c9vQj1kAjBEfY'
-SECRET_KEY = '**********************'
-# 初始化AipFace对象
-client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
-```
-
-需要自己获得一个授权，以调用百度OCR的API
-
-```python
-class OCR(db_conn.DBConn):
-    def __init__(self):
-        db_conn.DBConn.__init__(self)
-    def OCR_pic_cv(self):
-        try:
-            #获取图片
-            saveDir = 'data/'
-            '''
-            调用电脑摄像头来自动获取图片
-            '''
-            if not os.path.exists(saveDir):
-                os.makedirs(saveDir)
-            count = 1  # 图片计数索引
-            cap = cv2.VideoCapture(0)
-            width, height, w = 640, 480, 360
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-            crop_w_start = (width - w) // 2
-            crop_h_start = (height - w) // 2
-            print('width: ', width)
-            print('height: ', height)
-
-            ret, frame = cap.read()  # 获取相框
-            frame = frame[crop_h_start:crop_h_start + w, crop_w_start:crop_w_start + w]  # 展示相框
-            # frame=cv2.flip(frame,1,dst=None) 
-            cv2.imshow("capture", frame)
-            action = cv2.waitKey(1) & 0xFF
-            time.sleep(3)
-            cv2.imwrite("%s/%d.jpg" % (saveDir, count), cv2.resize(frame, (224, 224), interpolation=cv2.INTER_AREA))
-            print(u"%s: %d 张图片" % (saveDir, count))
-            count += 1
-            cap.release()  # 释放摄像头
-            cv2.destroyAllWindows()  # 丢弃窗口
-
-            #ocr图片获取图片文字
-            path='./data/1.jpg'
-            image = get_file_content(path)
-            # 调用通用文字识别, 图片为本地图片
-            res = client.general(image)
-
-            print(res)
-
-            result = []
-            for item in res['words_result']:
-                print(item['words'])
-                result.append(item['words'])
-
-            print(result)
-
-        except sqlalchemy.exc.IntegrityError as e:
-            return 528, "{}".format(str(e))
-        except BaseException as e:
-            return 530, "{}".format(str(e))
-
-        return 200, "ok", result
-
-```
-
-定义OCR方法
-
-```python
-    def OCR_pic(self, path):
-        try:
-            print(path)
-            image = get_file_content(path)
-            # 调用通用文字识别, 图片为本地图片
-            res = client.general(image)
-            print(res)
-            text = []
-            for item in res['words_result']:
-                print(item['words'])
-                text.append(item['words'])
-            print(text)
-            text_Seg = []
-            text_len = len(text)
-            doc = ""
-            for i in range(0, text_len):
-                doc += text[i]
-            print(doc)
-            sentence_Seg = ana.textrank(doc)
-            # sentence_Seg = str(sentence_Seg)
-            # sentence_Seg = sentence_Seg.strip(',')
-            print(sentence_Seg)
-            b = Buyer()
-            result = b.search_many(sentence_Seg)
-        except sqlalchemy.exc.IntegrityError as e:
-            return 528, "{}".format(str(e))
-        except BaseException as e:
-            return 530, "{}".format(str(e))
-
-        return 200, "ok", result
-```
-
-调用该函数后返回，把封面对准摄像头即可返回书本封面信息（最好可以等待五秒）
 
 
 
-------
 
-如不想使用摄像头功能，同样可以直接使用postman等测试工具上传图片，提取封面信息
-
-<img src="/Users/sunqiushi/Desktop/panzer/static/ocr-res-stats.png" alt="ocr-res-stats" style="zoom:50%;" />
 
 ## 五. 版本控制
 
-#### 活跃branch: improve
 
-<img src="static/git-status-improve.png" alt="git-status-improve" style="zoom:50%;" />
 
-#### 活跃branch: modification
 
-<img src="static/git-status-modification.png" alt="git-status-modification" style="zoom:50%;" />
 
 ## 六. 测试
 
 ### 6.1 利用pytest和coverage测试和评估代码
 
-本项目覆盖率在90%左右
+* 
 
-* #### coverage test 代码覆盖率评估
 
-<img src="static/coverage-test1.png" alt="coverage-test1" style="zoom:66%;" />
-
-<img src="static/coverage-test2.png" alt="coverage-test2" style="zoom:66%;" />
 
 ### 6.2 测试接口&样例
-
-#### 测试结果
-
-基础测试35个全部通过，除此之外，我们为进阶功能编写了35个测试，也全部通过
-
-<img src="static/test-result-part.png" alt="test-result-part" style="zoom:50%;" />
 
 #### 6.2.1 
 
@@ -583,6 +379,8 @@ class OCR(db_conn.DBConn):
 |          |               |              |
 |          |               |              |
 |          |               |              |
+
+#### 
 
 
 

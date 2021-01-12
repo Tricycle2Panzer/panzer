@@ -1,9 +1,11 @@
 from aip import AipOcr
 from be.model import db_conn
+from be.model.buyer import Buyer
 import sqlalchemy
 import os
 import cv2
 import time
+import jieba.analyse as ana
 
 # 定义常量
 APP_ID = '14544448'
@@ -23,8 +25,7 @@ def get_file_content(filePath):
 class OCR(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
-
-    def OCR_pic(self):
+    def OCR_pic_cv(self):
         try:
             #获取图片
             saveDir = 'data/'
@@ -45,7 +46,7 @@ class OCR(db_conn.DBConn):
 
             ret, frame = cap.read()  # 获取相框
             frame = frame[crop_h_start:crop_h_start + w, crop_w_start:crop_w_start + w]  # 展示相框
-            # frame=cv2.flip(frame,1,dst=None) 
+            # frame=cv2.flip(frame,1,dst=None)
             cv2.imshow("capture", frame)
             action = cv2.waitKey(1) & 0xFF
             time.sleep(3)
@@ -63,14 +64,14 @@ class OCR(db_conn.DBConn):
 
             print(res)
 
-            result = []
+            results = []
             for item in res['words_result']:
                 print(item['words'])
-                result.append(item['words'])
+                results.append(item['words'])
 
-            print(result)
-
-            self.conn.commit()
+            print(results)
+            b = Buyer()
+            result = b.search_many(results)
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -78,3 +79,78 @@ class OCR(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok", result
+
+    def OCR_pic(self, path):
+        try:
+            print(path)
+            image = get_file_content(path)
+            # 调用通用文字识别, 图片为本地图片
+            res = client.general(image)
+            print(res)
+            text = []
+            for item in res['words_result']:
+                print(item['words'])
+                text.append(item['words'])
+            print(text)
+            text_Seg = []
+            text_len = len(text)
+            doc = ""
+            for i in range(0, text_len):
+                doc += text[i]
+            print(doc)
+            sentence_Seg = ana.textrank(doc)
+            # sentence_Seg = str(sentence_Seg)
+            # sentence_Seg = sentence_Seg.strip(',')
+            print(sentence_Seg)
+
+            b = Buyer()
+            result = b.search_many(sentence_Seg)
+
+
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok", result
+
+#ocr 结果进行分词，方便检索
+
+# HanLP.Config.ShowTermNature = False
+# from pyhanlp import *
+# CRFnewSegment = HanLP.newSegment("crf")
+
+# delim = "'\{\”}\[],./'\"(,)<>《》"
+#
+# def get_ocr_seg_seperated(text): #直接用返回的json进行分词
+#     text_Seg = []
+#     text_len = len(text)
+#     for i in range (0,text_len):
+#         temp = CRFnewSegment.seg(text[i])
+#         for i in range (0 , len(temp)):
+#             if(str(temp[i]) not in delim):
+#                 text_Seg.append(str(temp[i]))
+#     return text_Seg
+#
+# def get_ocr_seg_integral(text):  #将返回的结果合并后进行分词
+#     text_Seg = []
+#     text_len = len(text)
+#     doc = ""
+#     for i in range(0, text_len):
+#         doc += text[i]
+#     print(doc)
+#     sentence_Seg = CRFnewSegment.seg(doc)
+#     sentence_Seg = str(sentence_Seg)
+#     sentence_Seg = sentence_Seg.strip(',')
+#     print(sentence_Seg)
+
+# test = [
+#     "洛",
+#     "家信经典",
+#     "洛克菲勒",
+#     "留给儿子的38封信",
+#     "国最省家族世代传的教子经",
+#     "n上过本书,可以的",
+#     "商和管理才",
+#     "中华工商联合出版社"]
+# get_ocr_seg_integral(test)

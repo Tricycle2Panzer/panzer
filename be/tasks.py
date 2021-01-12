@@ -5,6 +5,6 @@ class Config(object):
             'id': 'soft_real_time',
             'func': '__main__:time_exceed_delete',
             'trigger': 'interval',
-            'seconds': 6,
+            'seconds': 30,
         }
     ]

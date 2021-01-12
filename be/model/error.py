@@ -10,9 +10,9 @@ error_code = {
     517: "stock level low, book id {}",
     518: "invalid order id {}",
     519: "not sufficient funds, order id {}",
-    520: "cannot cancel order id {}",
-    521: "",
-    522: "cannot find book about {}",
+    520: "invalid status in order id {}",
+    521: "Unknown Error",
+    522: "Error For Test",
     523: "",
     524: "",
     525: "",
@@ -58,12 +58,16 @@ def error_not_sufficient_funds(order_id):
     return 519, error_code[519].format(order_id)
 
 
-def error_unable_cancel_order(order_id):
+def error_invalid_order_status(order_id):
     return 520, error_code[520].format(order_id)
 
 
-def error_search_key_empty(order_id):
-    return 522, error_code[522].format(order_id)
+def error_unknown(str):
+    return 521, error_code[521].format(str)
+
+
+def error_for_test(everything):
+    return 522, error_code[522].format(everything)
 
 
 def error_authorization_fail():

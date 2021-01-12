@@ -153,11 +153,12 @@ class Workload:
             # Thread_num:以新提交付款订单的数量作为并发数(这一次的TOTAL-上一次的TOTAL)
             # TOTAL:总付款提交订单数量
             # LATENCY:提交付款订单时间/处理付款订单笔数(只考虑该线程延迟，未考虑并发)
-            logging.info("TPS_C={}, NO=OK:{} Thread_num:{} TOTAL:{} LATENCY:{} , P=OK:{} Thread_num:{} TOTAL:{} LATENCY:{}".format(
+            logging.warning("TPS_C={}, NO=OK:{} Thread_num:{} TOTAL:{} LATENCY:{} , P=OK:{} Thread_num:{} TOTAL:{} LATENCY:{}".format(
                         int(self.n_new_order_ok / (self.time_payment / n_payment_diff + self.time_new_order / n_new_order_diff)), # 吞吐量:完成订单数/((付款所用时间+订单所用时间)/并发数)
                         self.n_new_order_ok, n_new_order_diff, self.n_new_order, self.time_new_order / self.n_new_order, # 订单延迟:(创建订单所用时间/并发数)/新创建订单数
                         self.n_payment_ok, n_payment_diff, self.n_payment, self.time_payment / self.n_payment # 付款延迟:(付款所用时间/并发数)/付款订单数
                         ))
+
         self.lock.release()
         # 旧值更新为新值，便于下一轮计算
         self.n_new_order_past = self.n_new_order
