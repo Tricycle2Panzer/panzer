@@ -82,7 +82,7 @@ class Buyer(db_conn.DBConn):
     def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
         conn = self.conn
         try:
-            cursor = conn.execute("SELECT order_id, user_id, store_id ,total_price, order_time, status FROM new_order WHERE order_id = :order_id",
+            cursor = conn.execute("SELECT * FROM new_order WHERE order_id = :order_id",
                                   {"order_id": order_id, })
             row = cursor.fetchone()
             if row is None:
@@ -91,20 +91,20 @@ class Buyer(db_conn.DBConn):
             order_id = row[0]
             buyer_id = row[1]
             store_id = row[2]
-            total_price = row[3]# 总价
-            order_time = row[4]
-            status = row[5]
+            total_price = row[4]# 总价
+            order_time = row[5]
+            status = row[3]
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
             if status != 1:
                 return error.error_invalid_order_status()
-            if check_order_time(order_time) == False:
-                self.conn.commit()
-                delete_unpaid_order(order_id)
-                o = Order()
-                o.cancel_order(order_id)
-                return error.error_invalid_order_id()
+            # if check_order_time(order_time) == False:
+            #     self.conn.commit()
+            #     delete_unpaid_order(order_id)
+            #     o = Order()
+            #     o.cancel_order(order_id)
+            #     return error.error_invalid_order_id()
 
             cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;",
                                   {"buyer_id": buyer_id, })
@@ -114,31 +114,33 @@ class Buyer(db_conn.DBConn):
             balance = row[0]
             if encrypt(password) != row[1]:
                 return error.error_authorization_fail()
+            if balance < total_price:
+                return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
-                                  {"store_id": store_id, })
-            row = cursor.fetchone()
-            if row is None:
-                return error.error_non_exist_store_id(store_id)
-
-            seller_id = row[1]
-
-            if not self.user_id_exist(seller_id):
-                return error.error_non_exist_user_id(seller_id)
+            # cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
+            #                       {"store_id": store_id, })
+            # row = cursor.fetchone()
+            # if row is None:
+            #     return error.error_non_exist_store_id(store_id)
+            #
+            # seller_id = row[1]
+            #
+            # if not self.user_id_exist(seller_id):
+            #     return error.error_non_exist_user_id(seller_id)
 
             # 下单扣买家的钱
             cursor = conn.execute("UPDATE users set balance = balance - :total_price1 "
                                   "WHERE user_id = :buyer_id AND balance >= :total_price2",
                                   {"total_price1": total_price, "buyer_id": buyer_id, "total_price2": total_price})
             if cursor.rowcount == 0:
-                return error.error_not_sufficient_funds(order_id)
+                return error.err
 
             self.conn.execute(
                 "UPDATE new_order set status=2 where order_id = '%s' ;" % (order_id))
             self.conn.commit()
 
             #从数组中删除
-            delete_unpaid_order(order_id)
+            # delete_unpaid_order(order_id)
 
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
@@ -171,7 +173,7 @@ class Buyer(db_conn.DBConn):
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
-            if status == 3:
+            if status != 3:
                 error.error_invalid_order_status(order_id)
 
             cursor = self.conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
