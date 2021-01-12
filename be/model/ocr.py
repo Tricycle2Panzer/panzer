@@ -26,7 +26,6 @@ def get_file_content(filePath):
 class OCR(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
-
     def OCR_pic_cv(self):
         try:
             #获取图片
@@ -89,7 +88,6 @@ class OCR(db_conn.DBConn):
             # 调用通用文字识别, 图片为本地图片
             res = client.general(image)
             print(res)
-
             text = []
             for item in res['words_result']:
                 print(item['words'])

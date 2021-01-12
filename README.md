@@ -1,10 +1,10 @@
 # 数据管理系统作业——Bookstore实验报告
 
-| 课程名称：数据管理系统 | 项目名称：bookstore   | 指导老师：周烜 |
-| ---------------------- | --------------------- | -------------- |
-| **姓名：汤琼**         | **学号：10182100106** | **年级：2018** |
-| **姓名：郑佳辰**       | **学号：**            | **年级：2018** |
-| **姓名：孙秋实**       | **学号：10185501402** | **年级：2018** |
+| 课程名称：当代数据管理系统 | 项目名称：bookstore   | 指导老师：周烜 |
+| -------------------------- | --------------------- | -------------- |
+| **姓名：汤琼**             | **学号：10182100106** | **年级：2018** |
+| **姓名：郑佳辰**           | **学号：10182100359** | **年级：2018** |
+| **姓名：孙秋实**           | **学号：10185501402** | **年级：2018** |
 
 [TOC]
 
@@ -46,9 +46,7 @@
 
 数据库初始化 （数据库已初始化完成，可直接运行下一步）//这边要改
 
-```python
-python init.py
-```
+1. MongoDB文档集需要自行建立（2张表）
 
 运行
 
@@ -64,12 +62,7 @@ python app.py
 
 ### 3.1 总体设计思路
 
-主要的实体类有：用户，订单，书店，书籍。
-
-用户的主要操作有：
-
-1. 查询
-2. 下订单
+为了保证...用了什么...
 
 
 
@@ -78,8 +71,6 @@ python app.py
 <img src="static/BookstoreER.png" alt="BookstoreER" style="zoom:50%;" />
 
 ### 3.3 关系模式
-
-
 
 #### 3.3.1 invert_index table
 
@@ -424,13 +415,129 @@ class Config(object):
 
 #### 4.3.9 搜索
 
+##### 亮点：OCR搜索
+
+我们调用了百度OCR的API来进行图书搜索，具体操作方法如下所示（以概率论与数理统计为例），我们尝试调用OCR功能在书库中检索这本书。
+
+<img src="static/stats-cover.png" alt="stats-cover" style="zoom:13%;" />
 
 
 
+##### Remark：需要摄像头功能（最好光线充足）
+
+```python
+APP_ID = '14544448'
+API_KEY = 'yRZGUXAlCd0c9vQj1kAjBEfY'
+SECRET_KEY = '**********************'
+# 初始化AipFace对象
+client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
+```
+
+需要自己获得一个授权，以调用百度OCR的API
+
+```python
+class OCR(db_conn.DBConn):
+    def __init__(self):
+        db_conn.DBConn.__init__(self)
+    def OCR_pic_cv(self):
+        try:
+            #获取图片
+            saveDir = 'data/'
+            '''
+            调用电脑摄像头来自动获取图片
+            '''
+            if not os.path.exists(saveDir):
+                os.makedirs(saveDir)
+            count = 1  # 图片计数索引
+            cap = cv2.VideoCapture(0)
+            width, height, w = 640, 480, 360
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            crop_w_start = (width - w) // 2
+            crop_h_start = (height - w) // 2
+            print('width: ', width)
+            print('height: ', height)
+
+            ret, frame = cap.read()  # 获取相框
+            frame = frame[crop_h_start:crop_h_start + w, crop_w_start:crop_w_start + w]  # 展示相框
+            # frame=cv2.flip(frame,1,dst=None) 
+            cv2.imshow("capture", frame)
+            action = cv2.waitKey(1) & 0xFF
+            time.sleep(3)
+            cv2.imwrite("%s/%d.jpg" % (saveDir, count), cv2.resize(frame, (224, 224), interpolation=cv2.INTER_AREA))
+            print(u"%s: %d 张图片" % (saveDir, count))
+            count += 1
+            cap.release()  # 释放摄像头
+            cv2.destroyAllWindows()  # 丢弃窗口
+
+            #ocr图片获取图片文字
+            path='./data/1.jpg'
+            image = get_file_content(path)
+            # 调用通用文字识别, 图片为本地图片
+            res = client.general(image)
+
+            print(res)
+
+            result = []
+            for item in res['words_result']:
+                print(item['words'])
+                result.append(item['words'])
+
+            print(result)
+
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok", result
+
+```
+
+定义OCR方法
+
+```python
+    def OCR_pic(self, path):
+        try:
+            print(path)
+            image = get_file_content(path)
+            # 调用通用文字识别, 图片为本地图片
+            res = client.general(image)
+            print(res)
+            text = []
+            for item in res['words_result']:
+                print(item['words'])
+                text.append(item['words'])
+            print(text)
+            text_Seg = []
+            text_len = len(text)
+            doc = ""
+            for i in range(0, text_len):
+                doc += text[i]
+            print(doc)
+            sentence_Seg = ana.textrank(doc)
+            # sentence_Seg = str(sentence_Seg)
+            # sentence_Seg = sentence_Seg.strip(',')
+            print(sentence_Seg)
+            b = Buyer()
+            result = b.search_many(sentence_Seg)
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok", result
+```
+
+调用该函数后返回，把封面对准摄像头即可返回书本封面信息（最好可以等待五秒）
 
 
 
+------
 
+如不想使用摄像头功能，同样可以直接使用postman等测试工具上传图片，提取封面信息
+
+<img src="/Users/sunqiushi/Desktop/panzer/static/ocr-res-stats.png" alt="ocr-res-stats" style="zoom:50%;" />
 
 ## 五. 版本控制
 
