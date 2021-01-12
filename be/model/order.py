@@ -32,15 +32,14 @@ class Order(db_conn.DBConn):
 
             books = []
             cursor = self.conn.execute(
-                "DELETE FROM new_order_detail WHERE order_id = :order_id RETURNING book_id, count, price ",
+                "DELETE FROM new_order_detail WHERE order_id = :order_id RETURNING book_id, count ",
                 {"order_id": order_id, })
             rows = cursor.fetchall()
 
             for row in rows:
                 book = {
                     "book_id" : row[0],
-                    "count" : row[1],
-                    "price" : row[2]
+                    "count" : row[1]
                 }
                 if end_status == 0:
                     cursor = self.conn.execute(

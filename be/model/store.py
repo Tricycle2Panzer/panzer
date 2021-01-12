@@ -42,7 +42,7 @@ class Store:
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS new_order_detail( "
-                "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
+                "order_id TEXT, book_id TEXT, count INTEGER,  "
                 "PRIMARY KEY(order_id, book_id))"
             )
 

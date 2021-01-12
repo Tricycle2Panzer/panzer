@@ -170,14 +170,13 @@ class Seller(db_conn.DBConn):
                     }
                     books = []
                     cursor = self.conn.execute(
-                        "SELECT book_id, count, price FROM new_order_detail WHERE order_id = :order_id ",
+                        "SELECT book_id, count FROM new_order_detail WHERE order_id = :order_id ",
                         {"order_id": order["order_id"], })
                     bookrows = cursor.fetchall()
                     for bookrow in bookrows:
                         book = {
                             "book_id": bookrow[0],
-                            "count": bookrow[1],
-                            "price": bookrow[2]
+                            "count": bookrow[1]
                         }
                         books.append(book)
                     order["books"] = books

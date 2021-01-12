@@ -49,9 +49,9 @@ class Buyer(db_conn.DBConn):
 
                 #创建新订单信息
                 self.conn.execute(
-                        "INSERT INTO new_order_detail(order_id, book_id, count, price) "
-                        "VALUES(:uid, :book_id, :count, :price)",
-                        {"uid":uid, "book_id":book_id, "count":count, "price":price})
+                        "INSERT INTO new_order_detail(order_id, book_id, count) "
+                        "VALUES(:uid, :book_id, :count)",
+                        {"uid":uid, "book_id":book_id, "count":count})
 
                 # 计算总价
                 total_price += count*price
