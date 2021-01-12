@@ -12,14 +12,11 @@ unpaid_orders = {}
 #优点：通过维护全局数组to_be_paid，没有额外新启线程，代价降到最低
 def add_unpaid_order(orderID):
     unpaid_orders[orderID] = get_time_stamp()
-    # print("add successfully")
-    # print(unpaid_orders)
     return 200, "ok"
 
 def delete_unpaid_order(orderID):
     try:
         unpaid_orders.pop(orderID)
-        # print(unpaid_orders)
     except BaseException as e:
         return 530, "{}".format(str(e))
     return 200, "ok"
@@ -36,7 +33,7 @@ def check_order_time(order_time):
 def time_exceed_delete():
     del_temp=[]
     o = Order()
-    print("new cycle start")
+    # print("new cycle start")
     for (oid,tim) in unpaid_orders.items():
         if check_order_time(tim) == False:
             del_temp.append(oid)  # remenber, not to append the index of the array, we need the orderID

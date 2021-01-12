@@ -25,20 +25,6 @@ class Buyer(db_conn.DBConn):
 
             total_price = 0
             for book_id, count in id_and_count:
-                # cursor = self.conn.execute(
-                #     "SELECT book_id, stock_level, price FROM store "
-                #     "WHERE store_id = :store_id AND book_id = :book_id",
-                #     {"store_id":store_id, "book_id":book_id})
-                # row = cursor.fetchone()#只取最上面的第一条结果
-                # if row is None:
-                #     return error.error_non_exist_book_id(book_id) + (order_id, )
-                #
-                # stock_level = row[1]#库存
-                # price = row[2] #书籍价格
-                #
-                # if stock_level < count: #判断库存
-                #     return error.error_stock_level_low(book_id) + (order_id,)
-
                 #更新库存
                 cursor = self.conn.execute(
                     "UPDATE store set stock_level = stock_level - :count "
@@ -99,12 +85,12 @@ class Buyer(db_conn.DBConn):
                 return error.error_authorization_fail()
             if status != 1:
                 return error.error_invalid_order_status()
-            # if check_order_time(order_time) == False:
-            #     self.conn.commit()
-            #     delete_unpaid_order(order_id)
-            #     o = Order()
-            #     o.cancel_order(order_id)
-            #     return error.error_invalid_order_id()
+            if check_order_time(order_time) == False:
+                self.conn.commit()
+                delete_unpaid_order(order_id)
+                o = Order()
+                o.cancel_order(order_id)
+                return error.error_invalid_order_id()
 
             cursor = conn.execute("SELECT balance, password FROM users WHERE user_id = :buyer_id;",
                                   {"buyer_id": buyer_id, })
@@ -117,30 +103,19 @@ class Buyer(db_conn.DBConn):
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            # cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = :store_id;",
-            #                       {"store_id": store_id, })
-            # row = cursor.fetchone()
-            # if row is None:
-            #     return error.error_non_exist_store_id(store_id)
-            #
-            # seller_id = row[1]
-            #
-            # if not self.user_id_exist(seller_id):
-            #     return error.error_non_exist_user_id(seller_id)
-
             # 下单扣买家的钱
             cursor = conn.execute("UPDATE users set balance = balance - :total_price1 "
                                   "WHERE user_id = :buyer_id AND balance >= :total_price2",
                                   {"total_price1": total_price, "buyer_id": buyer_id, "total_price2": total_price})
             if cursor.rowcount == 0:
-                return error.err
+                return error.error_unknown("update_user_error")
 
             self.conn.execute(
                 "UPDATE new_order set status=2 where order_id = '%s' ;" % (order_id))
             self.conn.commit()
 
             #从数组中删除
-            # delete_unpaid_order(order_id)
+            delete_unpaid_order(order_id)
 
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
@@ -190,12 +165,9 @@ class Buyer(db_conn.DBConn):
             cursor = self.conn.execute("UPDATE users set balance = balance + :total_price "
                                   "WHERE user_id = :seller_id",
                                   {"total_price": total_price, "seller_id": seller_id})
-
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
 
-            # self.conn.execute(
-            #     "UPDATE new_order set status=4 where order_id = '%s' ;" % (order_id))# 仍保留在new_order中，后续加入history后从new_order中删除
             self.conn.commit()
             o = Order()
             o.cancel_order(order_id, end_status=4)
@@ -262,10 +234,8 @@ class Buyer(db_conn.DBConn):
 
     def search(self, search_key, page=0) -> (int, str, list):
         try:
-            print(search_key)
             if page > 0:
                 page_lower = self.page_size * (page - 1)
-                print(page_lower)
                 cursor = self.conn.execute(
                     "SELECT book_id, book_title, book_author from invert_index "
                     "where search_key = '%s' "
@@ -287,7 +257,6 @@ class Buyer(db_conn.DBConn):
                     "author": row[2]
                 }
                 result.append(book)
-            print(result)
 
             self.conn.commit()
         except SQLAlchemyError as e:
@@ -318,7 +287,6 @@ class Buyer(db_conn.DBConn):
 
     def get_book_info(self, bid_list):
         try:
-            print("bid_list",bid_list)
             result = []
             for bid in bid_list:
                 book = self.mongo['book'].find_one({'id': bid},{'_id':0})
@@ -361,7 +329,6 @@ class Buyer(db_conn.DBConn):
                     "storage": row[4]
                 }
                 result.append(book)
-            print(result)
 
             self.conn.commit()
         except SQLAlchemyError as e:

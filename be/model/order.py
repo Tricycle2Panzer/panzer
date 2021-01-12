@@ -24,11 +24,6 @@ class Order(db_conn.DBConn):
                 "order_time" : row[4],
                 "status" : end_status
             }
-            # self.conn.execute(
-            #     "INSERT INTO old_order(order_id, store_id, user_id, total_price, status, order_time) "
-            #     "VALUES(:uid, :store_id, :user_id, :total_price, :status, :order_time)",
-            #     {"uid": order_id, "store_id": store_id, "user_id": buyer_id, "total_price": total_price,
-            #      "status": end_status, "order_time": order_time})
 
             books = []
             cursor = self.conn.execute(
@@ -51,14 +46,9 @@ class Order(db_conn.DBConn):
                         return error.error_non_exist_book_id(book["book_id"]) + (order_id,)
                 books.append(book)
 
-                # self.conn.execute(
-                #     "INSERT INTO old_order_detail(order_id, book_id, count, price) "
-                #     "VALUES(:uid, :book_id, :count, :price)",
-                #     {"uid": order_id, "book_id": book_id, "count": count, "price": price})
             self.conn.commit()
             order["books"] = books
             self.mongo['history_order'].insert_one(order)
-            print("cansql")
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:

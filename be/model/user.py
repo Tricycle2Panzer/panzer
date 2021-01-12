@@ -76,7 +76,6 @@ class User(db_conn.DBConn):
             return error.error_authorization_fail()
         db_token = row[0]
         if not self.__check_token(user_id, db_token, token):
-            print("11111")
             return error.error_authorization_fail()
         return 200, "ok"
 
@@ -251,17 +250,12 @@ class User(db_conn.DBConn):
                     for book in books:
                         if book['id'] not in reco.keys():
                             reco[book['id']] = book
-            print(len(reco))
             labels = list(set(labels))
-            print(labels)
             for book in reco.values():
                 book['sim'] = jarcard_sim(labels, book['tags'])
                 book.pop('tags')
-            print(reco)
             result = sorted(reco.values(), key=lambda k:k['sim'], reverse=True)
             result = result[:5]
-            print('111131')
-            print(result)
         except PyMongoError as e:
             return 529, "{}".format(str(e)), []
         except BaseException as e:

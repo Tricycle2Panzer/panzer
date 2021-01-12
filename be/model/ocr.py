@@ -6,7 +6,6 @@ import os
 import cv2
 import time
 import jieba.analyse as ana
-import re
 
 # 定义常量
 APP_ID = '14544448'
