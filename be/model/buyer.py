@@ -25,27 +25,31 @@ class Buyer(db_conn.DBConn):
 
             total_price = 0
             for book_id, count in id_and_count:
-                cursor = self.conn.execute(
-                    "SELECT book_id, stock_level, price FROM store "
-                    "WHERE store_id = :store_id AND book_id = :book_id",
-                    {"store_id":store_id, "book_id":book_id})
-                row = cursor.fetchone()#只取最上面的第一条结果
-                if row is None:
-                    return error.error_non_exist_book_id(book_id) + (order_id, )
-
-                stock_level = row[1]#库存
-                price = row[2] #书籍价格
-
-                if stock_level < count: #判断库存
-                    return error.error_stock_level_low(book_id) + (order_id,)
+                # cursor = self.conn.execute(
+                #     "SELECT book_id, stock_level, price FROM store "
+                #     "WHERE store_id = :store_id AND book_id = :book_id",
+                #     {"store_id":store_id, "book_id":book_id})
+                # row = cursor.fetchone()#只取最上面的第一条结果
+                # if row is None:
+                #     return error.error_non_exist_book_id(book_id) + (order_id, )
+                #
+                # stock_level = row[1]#库存
+                # price = row[2] #书籍价格
+                #
+                # if stock_level < count: #判断库存
+                #     return error.error_stock_level_low(book_id) + (order_id,)
 
                 #更新库存
                 cursor = self.conn.execute(
                     "UPDATE store set stock_level = stock_level - :count "
-                    "WHERE store_id = :store_id and book_id = :book_id and stock_level >= :count ",
+                    "WHERE store_id = :store_id and book_id = :book_id and stock_level >= :count "
+                    "RETURNING price",
                     {"count":count, "store_id":store_id, "book_id":book_id, "count":count})
                 if cursor.rowcount == 0:
+                    self.conn.rollback()
                     return error.error_stock_level_low(book_id) + (order_id, )
+                row = cursor.fetchone()
+                price = row[0]
 
                 #创建新订单信息
                 self.conn.execute(
@@ -54,7 +58,7 @@ class Buyer(db_conn.DBConn):
                         {"uid":uid, "book_id":book_id, "count":count})
 
                 # 计算总价
-                total_price += count*price
+                total_price += count * price
 
             self.conn.execute(
                 "INSERT INTO new_order(order_id, store_id, user_id, total_price, order_time) "
