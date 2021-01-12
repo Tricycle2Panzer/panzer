@@ -137,6 +137,12 @@ class Seller(db_conn.DBConn):
                 return error.error_non_exist_store_id(store_id)
             if not self.order_id_exist(order_id):   #增加order_id不存在的错误处理
                 return error.error_invalid_order_id(order_id)
+            cursor = self.conn.execute(
+                "SELECT status FROM new_order where order_id = '%s' ;" % (order_id))
+            row = cursor.fetchone()
+            status = row[0]
+            if status != 2:
+                return error.error_invalid_order_status(order_id)
 
             self.conn.execute(
                 "UPDATE new_order set status=3 where order_id = '%s' ;" % (order_id))
