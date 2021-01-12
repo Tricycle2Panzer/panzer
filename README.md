@@ -883,7 +883,7 @@ class OCR(db_conn.DBConn):
 
 调用该函数后返回，把封面对准摄像头即可提取书本封面文本（最好可以等待五秒），返回书籍信息，其中对关键词的搜索查询的结果是单关键字搜索结果的并集。
 
-![ssocr](static\ssocr.png)
+![ssocr](static/ssocr.png)
 
 #### 4.3.11 获取书籍信息
 
@@ -952,7 +952,7 @@ book = self.mongo['book'].find_one({'id': bid},{'_id':0})
 
 以下为吞吐量及延迟测试的结果，可见效果理想，吞吐量维持在**40,000**左右，延迟约为 **0.01**。
 
-<img src="\static\bench.png" alt="bench" style="zoom:80%;" />
+<img src="static/bench.png" alt="bench" style="zoom:80%;" />
 
 ### 6.3 测试接口&样例
 
@@ -960,7 +960,7 @@ book = self.mongo['book'].find_one({'id': bid},{'_id':0})
 
 基础测试35个全部通过，除此之外，我们为**进阶功能**编写了37个测试，也全部通过
 
-![test-result-final](static\test-result-final.png)
+![test-result-final](static/test-result-final.png)
 
 #### 6.3.2 测试样例
 
